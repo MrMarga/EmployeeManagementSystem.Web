@@ -62,7 +62,7 @@ const AddEmployee = () => {
   return (
     <div className="signup-container">
       <div className="signup-subContainer">
-        <div className="Header">Sign Up</div>
+        <div className="Header">Add Employee</div>
         <div className="Body">
           <form onSubmit={handleSubmit}>
             <TextField

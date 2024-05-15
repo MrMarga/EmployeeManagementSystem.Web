@@ -49,6 +49,7 @@ const UpdateEmployee = () => {
     try {
       await employeeService.UpdateEmployee(id, formData);
       setSuccess(true);
+      window.location.href = "/HomePage";
     } catch (error) {
       setError("Error updating employee");
     } finally {

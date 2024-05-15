@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./HomePage.scss";
+
 import {
   Container,
   CircularProgress,
@@ -40,6 +41,7 @@ const HomePage = () => {
     fetchData();
   }, []);
 
+  //-----------------Employee Deletion------------------//
   const handleDelete = async (id) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this employee?"
@@ -68,9 +70,9 @@ const HomePage = () => {
 
   return (
     <>
-      <div className="Header">Employee Management System</div>
       <Container>
-        <h1>Employee List</h1>
+        <h1>Employee Management System</h1>
+        <h2>Employee List</h2>
         <div>
           <h3>
             <NavLink to="/AddEmployee">Add Employee</NavLink>{" "}
