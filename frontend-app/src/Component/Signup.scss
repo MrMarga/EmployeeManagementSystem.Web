@@ -1,0 +1,76 @@
+.signup-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f5f5f5; /* Light background color */
+
+  .signup-subContainer {
+    background-color: #ffffff; /* White background color */
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 500px; /* Adjusted maximum width */
+  }
+
+  .Header {
+    font-size: 32px;
+    font-weight: bold;
+    text-align: center;
+    color: #1346df; /* Darker text color */
+    margin-bottom: 30px; /* Increased margin */
+  }
+
+  .Body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .TextField {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .MuiRadio-root {
+      color: #007bff; /* Radio button color */
+    }
+
+    .MuiFormControlLabel-root {
+      margin-bottom: 10px; /* Added space between radio buttons */
+    }
+  }
+
+  .buttons {
+    display: flex;
+    justify-content: space-between; /* Space between buttons */
+    margin-top: 30px; /* Increased margin */
+
+    button {
+      padding: 12px 24px; /* Adjusted padding */
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background-color: #007bff; /* Button background color */
+      color: #ffffff; /* Button text color */
+      font-size: 16px;
+      font-weight: bold;
+      transition: background-color 0.3s; /* Smooth hover transition */
+
+      &:hover {
+        background-color: #0056b3; /* Darker background color on hover */
+      }
+    }
+  }
+
+  h2 {
+    font-size: 24px;
+    text-align: center;
+    margin-top: 30px; /* Increased margin */
+    color: #007bff; /* Title color */
+  }
+}
+
+.down-buttons {
+  margin-top: 20px;
+}
