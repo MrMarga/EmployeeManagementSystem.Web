@@ -1,5 +1,6 @@
 ﻿using backend_app.DTO;
 using backend_app.EmployeeRepository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
@@ -17,6 +18,7 @@ namespace backend_app.Controllers
         }
 
         [HttpGet("{id}")]
+       
         public async Task<IActionResult> GetEmployeeById(int id)
         {
             var employee = await _employeeCRUD.GetEmployeeById(id);
@@ -45,6 +47,7 @@ namespace backend_app.Controllers
         }
 
         [HttpGet]
+        
         public async Task<IActionResult> GetAllEmployee()
         {
             var employees = await _employeeCRUD.GetAllEmployee();
@@ -52,6 +55,7 @@ namespace backend_app.Controllers
         }
 
         [HttpPost]
+        
         public async Task<IActionResult> AddEmployee(EmployeeDTO employee)
         {
             await _employeeCRUD.AddEmployee(employee);

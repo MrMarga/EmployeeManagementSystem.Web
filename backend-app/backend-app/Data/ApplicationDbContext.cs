@@ -1,10 +1,11 @@
 ﻿using backend_app.Model;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend_app.Data
 {
-    public class ApplicationDbContext : DbContext
-    {
+    public class ApplicationDbContext : IdentityDbContext
+    { 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
 
