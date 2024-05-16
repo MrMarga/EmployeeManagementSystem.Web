@@ -1,6 +1,7 @@
 const Configuration = {
-  SignUp: "https://localhost:7298/api/Backend/SignUp",
-  Login: "https://localhost:7298/api/Backend/Login",
+  SignUp: "https://localhost:7298/api/Auth/signup",
+  Login: "https://localhost:7298/api/Auth/login",
+  Logout: "https://localhost:7298/api/Auth/logout",
 
   //-----------------------EmployeeCRUD-----------------//
 

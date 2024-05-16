@@ -6,11 +6,14 @@ import RadioGroup from "@mui/material/RadioGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
+import { useNavigate } from "react-router-dom"; // Import useNavigate hook
 import AuthServices from "../Services/AuthServices";
 
 const authService = new AuthServices();
 
 const Login = () => {
+  const navigate = useNavigate(); // Initialize the navigate function
+
   const [formData, setFormData] = useState({
     Email: "",
     Password: "",
@@ -37,7 +40,7 @@ const Login = () => {
   };
 
   const AccountAlready = (e) => {
-    window.location.href = "/";
+    navigate("/");
   };
 
   const handleSubmit = async (e) => {
@@ -55,7 +58,21 @@ const Login = () => {
         const response = await authService.Login(data);
         if (response.data.isSuccess) {
           console.log("Login successful!", response);
-          window.location.href = "/HomePage";
+
+          // Parse user data from JSON string to key-value format
+          const userData = JSON.parse(response.data.userDataJson);
+
+          // Store user data in local storage as key-value pairs
+          Object.entries(userData).forEach(([key, value]) => {
+            localStorage.setItem(key, value);
+          });
+
+          // Store user data in session storage as key-value pairs
+          Object.entries(userData).forEach(([key, value]) => {
+            sessionStorage.setItem(key, value);
+          });
+
+          navigate("/homePage"); // Navigate to the homepage route
         } else {
           console.log("response", response.data.message);
         }

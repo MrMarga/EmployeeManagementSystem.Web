@@ -12,8 +12,8 @@ const authService = new AuthServices();
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
-    Name: "",
     Username: "",
+    Name: "",
     Password: "",
     ConfirmPassword: "",
     Email: "",
@@ -37,7 +37,6 @@ const SignUp = () => {
   const checkValidity = () => {
     setFormData({
       ...formData,
-
       UsernameFlag: formData.Username === "",
       EmailFlag: formData.Email === "",
       PasswordFlag: formData.Password === "",
@@ -80,11 +79,11 @@ const SignUp = () => {
         email: formData.Email,
         password: formData.Password,
         confirmPassword: formData.ConfirmPassword,
-        Role: formData.RoleValue,
+        role: formData.RoleValue,
       };
       authService
         .SignUp(data)
-        .then((data) => {
+        .then((response) => {
           setFormData({
             Name: "",
             Username: "",
@@ -97,12 +96,13 @@ const SignUp = () => {
             PasswordFlag: false,
             ConfirmPasswordFlag: false,
           });
-          console.log("data:", data);
+          console.log("data:", response.data);
+          // Redirect to login after successful signup
+          window.location.href = "/Login";
         })
         .catch((error) => {
           console.log("Error:", error);
         });
-      window.location.href = "/Login";
     } else {
       console.log("Form submission failed. Please check your inputs.");
     }
@@ -188,7 +188,7 @@ const SignUp = () => {
             <div>
               <Stack spacing={10} direction="row">
                 <Button onClick={handleSignInClick}>
-                  Already has an account Sign In
+                  Already has an account? Sign In
                 </Button>
                 <Button type="submit" variant="outlined">
                   Sign Up

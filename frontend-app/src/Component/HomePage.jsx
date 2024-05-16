@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import "./HomePage.scss";
-
 import {
   Container,
   CircularProgress,
@@ -13,7 +12,7 @@ import {
   Paper,
   Button,
 } from "@mui/material";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import EmployeeServices from "../Services/EmployeeServices";
 
 const HomePage = () => {
@@ -60,6 +59,24 @@ const HomePage = () => {
     }
   };
 
+  const isLoggedIn = () => {
+    localStorage.getItem("userData") || sessionStorage.getItem("userData");
+    if (!isLoggedIn) {
+      navigate("/login");
+    }
+  };
+
+  const navigate = useNavigate();
+  // Logout function
+  const handleLogout = async () => {
+    // Remove user data from local storage
+    localStorage.removeItem("userData");
+    // Remove user data from session storage
+    sessionStorage.removeItem("userData");
+
+    console.log("Logout successful");
+    navigate("/login");
+  };
   if (loading) {
     return (
       <div className="loading">
@@ -117,6 +134,12 @@ const HomePage = () => {
             </TableBody>
           </Table>
         </TableContainer>
+      </Container>
+      {/* Logout button */}
+      <Container>
+        <Button variant="outlined" onClick={handleLogout}>
+          Logout
+        </Button>
       </Container>
     </>
   );
