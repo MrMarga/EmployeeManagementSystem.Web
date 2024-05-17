@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -10,7 +10,6 @@ import Login from "./Component/Login";
 import HomePage from "./Component/HomePage";
 import AddEmployee from "./Component/AddEmployee";
 import UpdateEmployee from "./Component/UpdateEmployee";
-import ProtectedRoute from "./Component/ProtectedRoute";
 
 function App() {
   return (
@@ -19,18 +18,9 @@ function App() {
         <Routes>
           <Route path="/" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
-          <Route
-            path="/homePage"
-            element={<ProtectedRoute element={<HomePage />} />}
-          />
-          <Route
-            path="/addEmployee"
-            element={<ProtectedRoute element={<AddEmployee />} />}
-          />
-          <Route
-            path="/updateEmployee/:id"
-            element={<ProtectedRoute element={<UpdateEmployee />} />}
-          />
+          <Route path="/homePage" element={<HomePage />} />
+          <Route path="/addEmployee" element={<AddEmployee />} />
+          <Route path="/updateEmployee/:id" element={<UpdateEmployee />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>
