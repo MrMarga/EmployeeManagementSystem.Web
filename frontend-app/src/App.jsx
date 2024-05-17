@@ -12,19 +12,6 @@ import AddEmployee from "./Component/AddEmployee";
 import UpdateEmployee from "./Component/UpdateEmployee";
 
 function App() {
-  useEffect(() => {
-    // Clear the cookie from local storage after 5 minutes
-    const timeoutId = setTimeout(() => {
-      localStorage.removeItem("userData");
-      console.log("Cookie cleared");
-      window.location.href = "/login";
-    }, 2 * 60 * 1000); // 5 minutes in milliseconds
-
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, []);
-
   return (
     <div>
       <Router>

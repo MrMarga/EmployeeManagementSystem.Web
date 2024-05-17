@@ -67,11 +67,6 @@ const Login = () => {
             localStorage.setItem(key, value);
           });
 
-          // Store user data in session storage as key-value pairs
-          Object.entries(userData).forEach(([key, value]) => {
-            sessionStorage.setItem(key, value);
-          });
-
           navigate("/homePage"); // Navigate to the homepage route
         } else {
           console.log("response", response.data.message);
