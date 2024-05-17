@@ -67,6 +67,10 @@ const Login = () => {
             localStorage.setItem(key, value);
           });
 
+          Object.entries(userData).forEach(([key, value]) => {
+            sessionStorage.setItem(key, value);
+          });
+
           navigate("/homePage"); // Navigate to the homepage route
         } else {
           console.log("response", response.data.message);

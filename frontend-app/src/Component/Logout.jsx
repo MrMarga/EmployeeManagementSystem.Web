@@ -4,6 +4,7 @@ import React from "react";
 const Logout = () => {
   const onLogout = () => {
     localStorage.clear();
+    sessionStorage.clear();
     window.location.href = "/login";
   };
 
