@@ -17,11 +17,14 @@ import EmployeeServices from "../Services/EmployeeServices";
 import Logout from "./Logout";
 
 const HomePage = () => {
-  const [employees, setEmployees] = useState([]);
+  const [employees, setEmployees] = useState();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!localStorage.UserId) {
+        window.location.href = "/login";
+      }
       const employeeService = new EmployeeServices();
       try {
         const response = await employeeService.GetAllEmployee();
@@ -69,7 +72,7 @@ const HomePage = () => {
         <h2>Employee List</h2>
         <div>
           <h3>
-            <NavLink to="/addEmployee">Add Employee</NavLink>
+            <NavLink to="/AddEmployee">Add Employee</NavLink>
           </h3>
         </div>
         <TableContainer component={Paper}>
@@ -91,7 +94,7 @@ const HomePage = () => {
                     <TableCell>{employee.phone}</TableCell>
                     <TableCell>
                       <Button>
-                        <NavLink to={`/updateEmployee/${employee.id}`}>
+                        <NavLink to={`/UpdateEmployee/${employee.id}`}>
                           Edit
                         </NavLink>
                       </Button>
