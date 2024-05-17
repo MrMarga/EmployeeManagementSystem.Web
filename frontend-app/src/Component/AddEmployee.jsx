@@ -5,10 +5,6 @@ import EmployeeServices from "../Services/EmployeeServices";
 const employeeService = new EmployeeServices();
 
 const AddEmployee = () => {
-  if (!localStorage.UserId) {
-    window.location.href = "/login";
-  }
-
   const [formData, setFormData] = useState({
     FullName: "",
     Email: "",
