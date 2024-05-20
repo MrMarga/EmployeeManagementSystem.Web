@@ -11,6 +11,8 @@ import HomePage from "./Component/HomePage";
 import AddEmployee from "./Component/AddEmployee";
 import UpdateEmployee from "./Component/UpdateEmployee";
 import ProtectedRoute from "./Component/ProtectedRoute";
+import TrendsPage from "./Component/TrendsPage";
+import ForgotPassword from "./Component/ForgetPassword";
 
 function App() {
   return (
@@ -19,6 +21,7 @@ function App() {
         <Routes>
           <Route path="/" element={<SignUp />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route
             path="/homePage"
             element={<ProtectedRoute element={<HomePage />} />}
@@ -30,6 +33,10 @@ function App() {
           <Route
             path="/updateEmployee/:id"
             element={<ProtectedRoute element={<UpdateEmployee />} />}
+          />
+          <Route
+            path="/trendsPage"
+            element={<ProtectedRoute element={<TrendsPage />} />}
           />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

@@ -21,4 +21,10 @@ export default class AuthServices {
       withCredentials: true,
     });
   }
+
+  ForgotPassword(data) {
+    return axiosServices.post(Configuration.ForgotPassword, data, {
+      withCredentials: true,
+    });
+  }
 }
