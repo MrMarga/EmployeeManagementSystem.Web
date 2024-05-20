@@ -11,8 +11,6 @@ namespace backend_app.Data
 
         }
 
-        public DbSet<UserDetails> UserDetails { get; set; }
-
         public DbSet<Employee> Employees { get; set; }
 
 

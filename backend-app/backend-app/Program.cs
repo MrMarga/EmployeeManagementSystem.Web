@@ -1,16 +1,12 @@
-using backend_app.Data;
-using backend_app.EmployeeRepository;
-using backend_app.EmployeeRepository.BussinessLayer;
-using Microsoft.AspNetCore.Authentication.Cookies; // Import Cookie Authentication
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http; // Import HttpContext
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.CookiePolicy;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using System;
+using backend_app.Data;
+using backend_app.EmployeeRepository.BussinessLayer;
+using backend_app.EmployeeRepository;
+using Microsoft.AspNetCore.Authentication;
 
 namespace backend_app
 {
@@ -47,6 +43,12 @@ namespace backend_app
                 options.MinimumSameSitePolicy = SameSiteMode.None;
                 options.HttpOnly = HttpOnlyPolicy.Always;
                 options.Secure = CookieSecurePolicy.Always;
+            });
+
+            // Configure password reset token options
+            builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
+            {
+                options.TokenLifespan = TimeSpan.FromMinutes(5); // Set token lifespan to 5 minutes
             });
 
             // Configure authentication

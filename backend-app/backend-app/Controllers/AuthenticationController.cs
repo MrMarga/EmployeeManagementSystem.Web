@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 using backend_app.Model;
+
 
 namespace backend_app.Controllers
 {
@@ -15,6 +13,8 @@ namespace backend_app.Controllers
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        
+
 
         public AuthController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager, RoleManager<IdentityRole> roleManager)
         {
@@ -94,6 +94,37 @@ namespace backend_app.Controllers
             return Unauthorized(new LogInResponse { IsSuccess = false, Message = "Invalid username or password" });
         }
 
-       
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest forgotPasswordRequest)
+        {
+            if (string.IsNullOrEmpty(forgotPasswordRequest.Email))
+            {
+                return BadRequest(new { Message = "Email is required" });
+            }
+
+            var user = await _userManager.FindByEmailAsync(forgotPasswordRequest.Email);
+            if (user == null)
+            {
+                return BadRequest(new { Message = "User not found" });
+            }
+
+            // Generate a password reset token
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            // Store the token with its expiration time
+            var tokenExpirationTime = DateTime.UtcNow.AddMinutes(5);
+            
+
+            // Return the reset token along with expiration message
+            var response = new
+            {
+                ResetToken = token,
+                ExpirationTime = tokenExpirationTime,
+                Message = "Reset token expires in 5 minutes"
+            };
+
+            return Ok(response);
+        }
+
     }
 }

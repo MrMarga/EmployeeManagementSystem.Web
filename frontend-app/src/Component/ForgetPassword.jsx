@@ -23,6 +23,7 @@ const ForgotPassword = () => {
         const response = await authService.ForgotPassword({ email });
         if (response.data.resetToken) {
           console.log("Password reset email sent successfully!");
+          console.log(response.data);
           setResetToken(response.data.resetToken);
           setMessage(response.data.message);
         } else {
