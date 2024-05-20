@@ -3,6 +3,7 @@ const Configuration = {
   Login: "https://localhost:7298/api/Auth/login",
   Logout: "https://localhost:7298/api/Auth/logout",
   ForgotPassword: "https://localhost:7298/api/Auth/forgot-password",
+  ResetPassword: "https://localhost:7298/api/Auth/reset-password",
 
   //-----------------------EmployeeCRUD-----------------//
 

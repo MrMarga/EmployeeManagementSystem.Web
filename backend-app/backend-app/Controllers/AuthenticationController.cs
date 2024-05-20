@@ -111,20 +111,50 @@ namespace backend_app.Controllers
             // Generate a password reset token
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 
+            // Construct the reset password link
+            var resetLink = Url.Action("ResetPassword", "Auth", new { token }, Request.Scheme);
+
             // Store the token with its expiration time
             var tokenExpirationTime = DateTime.UtcNow.AddMinutes(5);
-            
 
-            // Return the reset token along with expiration message
+            // Return the reset token along with expiration message and reset password link
             var response = new
             {
                 ResetToken = token,
+                ResetLink = resetLink,
                 ExpirationTime = tokenExpirationTime,
-                Message = "Reset token expires in 5 minutes"
+                Message = "Reset token expires in 5 minutes",
+                Email = user.Email,
             };
 
             return Ok(response);
         }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(ResetPasswordRequest resetPasswordRequest)
+        {
+            if (string.IsNullOrEmpty(resetPasswordRequest.Email) || string.IsNullOrEmpty(resetPasswordRequest.Token) || string.IsNullOrEmpty(resetPasswordRequest.NewPassword))
+            {
+                return BadRequest(new { Message = "Email, reset token, and new password are required" });
+            }
+
+            var user = await _userManager.FindByEmailAsync(resetPasswordRequest.Email);
+            if (user == null)
+            {
+                return BadRequest(new { Message = "User not found" });
+            }
+
+            
+            var result = await _userManager.ResetPasswordAsync(user, resetPasswordRequest.Token, resetPasswordRequest.NewPassword);
+            if (result.Succeeded)
+            {
+                return Ok(new { Message = "Password reset successfully" });
+            }
+
+            var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+            return BadRequest(new { Message = $"Failed to reset password: {errors}" });
+        }
+
 
     }
 }
