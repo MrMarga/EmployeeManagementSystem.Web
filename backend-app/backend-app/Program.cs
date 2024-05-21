@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.CookiePolicy;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System;
 using backend_app.Data;
-using backend_app.EmployeeRepository.BussinessLayer;
-using backend_app.EmployeeRepository;
 using Microsoft.AspNetCore.Authentication;
+using backend_app.EmployeeRepository;
+using backend_app.UserRepository;
+using backend_app.EmployeeRepository.BussinessLayer;
+
 
 namespace backend_app
 {
@@ -25,30 +25,12 @@ namespace backend_app
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("Backend-DB")));
 
-            // Add Identity services
-            builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
-            {
-                options.Password.RequireDigit = true;
-                options.Password.RequireLowercase = true;
-                options.Password.RequireUppercase = false;
-                options.Password.RequireNonAlphanumeric = true;
-                options.Password.RequiredLength = 6;
-            })
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
-
             // Configure cookie settings
             builder.Services.Configure<CookiePolicyOptions>(options =>
             {
                 options.MinimumSameSitePolicy = SameSiteMode.None;
                 options.HttpOnly = HttpOnlyPolicy.Always;
                 options.Secure = CookieSecurePolicy.Always;
-            });
-
-            // Configure password reset token options
-            builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
-            {
-                options.TokenLifespan = TimeSpan.FromMinutes(5); // Set token lifespan to 5 minutes
             });
 
             // Configure authentication
@@ -62,6 +44,7 @@ namespace backend_app
                 });
 
             // Injecting Dependencies
+            builder.Services.AddScoped<IUserServices, UserService>();
             builder.Services.AddScoped<IEmployeeCRUD, EmployeeCRUD>();
 
             var app = builder.Build();
