@@ -43,6 +43,10 @@ const Login = () => {
     navigate("/");
   };
 
+  const handleForgotPassword = () => {
+    navigate("/forgot-password");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     checkValidity();
@@ -133,7 +137,9 @@ const Login = () => {
                 <Button variant="text" onClick={AccountAlready}>
                   Create a New account
                 </Button>
-
+                <Button variant="text" onClick={handleForgotPassword}>
+                  Forgot Password?
+                </Button>
                 <Button type="submit" variant="outlined">
                   Login
                 </Button>

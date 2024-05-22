@@ -1,16 +1,12 @@
-using backend_app.Data;
-using backend_app.EmployeeRepository;
-using backend_app.EmployeeRepository.BussinessLayer;
-using Microsoft.AspNetCore.Authentication.Cookies; // Import Cookie Authentication
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http; // Import HttpContext
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.CookiePolicy;
+using Microsoft.EntityFrameworkCore;
+using backend_app.Data;
+using Microsoft.AspNetCore.Authentication;
+using backend_app.EmployeeRepository;
+using backend_app.UserRepository;
+using backend_app.EmployeeRepository.BussinessLayer;
+
 
 namespace backend_app
 {
@@ -28,18 +24,6 @@ namespace backend_app
             // Registering Database
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("Backend-DB")));
-
-            // Add Identity services
-            builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
-            {
-                options.Password.RequireDigit = true;
-                options.Password.RequireLowercase = true;
-                options.Password.RequireUppercase = false;
-                options.Password.RequireNonAlphanumeric = true;
-                options.Password.RequiredLength = 6;
-            })
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
 
             // Configure cookie settings
             builder.Services.Configure<CookiePolicyOptions>(options =>
@@ -60,6 +44,7 @@ namespace backend_app
                 });
 
             // Injecting Dependencies
+            builder.Services.AddScoped<IUserServices, UserService>();
             builder.Services.AddScoped<IEmployeeCRUD, EmployeeCRUD>();
 
             var app = builder.Build();

@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -10,21 +10,46 @@ import Login from "./Component/Login";
 import HomePage from "./Component/HomePage";
 import AddEmployee from "./Component/AddEmployee";
 import UpdateEmployee from "./Component/UpdateEmployee";
+import ProtectedRoute from "./Component/ProtectedRoute";
+import TrendsPage from "./Component/TrendsPage";
+import ForgotPassword from "./Component/ForgetPassword";
+import PasswordReset from "./Component/PasswordReset";
 
 function App() {
   return (
-    <div>
-      <Router>
-        <Routes>
-          <Route path="/" element={<SignUp />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/homePage" element={<HomePage />} />
-          <Route path="/addEmployee" element={<AddEmployee />} />
-          <Route path="/updateEmployee/:id" element={<UpdateEmployee />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </Router>
-    </div>
+    <Router>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<SignUp />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route
+          path="/reset-password/:email/:token"
+          element={<PasswordReset />}
+        />
+
+        {/* Protected Routes */}
+        <Route
+          path="/homePage"
+          element={<ProtectedRoute element={<HomePage />} />}
+        />
+        <Route
+          path="/addEmployee"
+          element={<ProtectedRoute element={<AddEmployee />} />}
+        />
+        <Route
+          path="/updateEmployee/:id"
+          element={<ProtectedRoute element={<UpdateEmployee />} />}
+        />
+        <Route
+          path="/trendsPage"
+          element={<ProtectedRoute element={<TrendsPage />} />}
+        />
+
+        {/* Fallback Route */}
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </Router>
   );
 }
 
