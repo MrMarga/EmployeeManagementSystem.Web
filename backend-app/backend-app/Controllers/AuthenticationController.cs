@@ -1,8 +1,9 @@
-﻿// Controllers/AuthController.cs
+﻿
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using backend_app.Model;
 using backend_app.UserRepository;
+using System.Globalization;
 
 namespace backend_app.Controllers
 {
@@ -35,6 +36,8 @@ namespace backend_app.Controllers
             return BadRequest(new SignUpResponse { IsSuccess = false, Message = "User already exists" });
         }
 
+
+
         [HttpPost("login")]
         public async Task<IActionResult> LogIn(LogInRequest logInRequest)
         {
@@ -61,8 +64,21 @@ namespace backend_app.Controllers
 
             string userDataJson = JsonSerializer.Serialize(userData);
 
+            
+            var cookieOptions = new CookieOptions
+            {
+                Expires = DateTime.UtcNow.AddMinutes(5),
+                HttpOnly = true,
+                IsEssential = true,
+
+                
+            };
+
+            Response.Cookies.Append("UserData", userDataJson, cookieOptions);
+
             return Ok(new LogInResponse { IsSuccess = true, Message = "Login successful", UserDataJson = userDataJson });
         }
+
 
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest forgotPasswordRequest)
@@ -72,20 +88,20 @@ namespace backend_app.Controllers
                 return BadRequest(new { Message = "Email is required" });
             }
 
-            var token = await _userService.GeneratePasswordResetTokenAsync(forgotPasswordRequest.Email);
+            var (token, createdAt) = await _userService.GeneratePasswordResetTokenWithCreatedAtAsync(forgotPasswordRequest.Email);
             if (token == null)
             {
                 return BadRequest(new { Message = "User not found" });
             }
 
             var resetLink = Url.Action("ResetPassword", "Auth", new { token }, Request.Scheme);
-            var tokenExpirationTime = DateTime.UtcNow.AddMinutes(5);
+
 
             var response = new
             {
                 ResetToken = token,
                 ResetLink = resetLink,
-                ExpirationTime = tokenExpirationTime,
+                CreatedAt = createdAt,
                 Message = "Reset token expires in 5 minutes",
                 Email = forgotPasswordRequest.Email,
             };
@@ -96,7 +112,7 @@ namespace backend_app.Controllers
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword(ResetPasswordRequest resetPasswordRequest)
         {
-            if (string.IsNullOrEmpty(resetPasswordRequest.Email) || string.IsNullOrEmpty(resetPasswordRequest.Token) || string.IsNullOrEmpty(resetPasswordRequest.NewPassword))
+            if (string.IsNullOrEmpty(resetPasswordRequest.Email) || string.IsNullOrEmpty(resetPasswordRequest.Token)|| string.IsNullOrEmpty(resetPasswordRequest.NewPassword))
             {
                 return BadRequest(new { Message = "Email, reset token, and new password are required" });
             }
