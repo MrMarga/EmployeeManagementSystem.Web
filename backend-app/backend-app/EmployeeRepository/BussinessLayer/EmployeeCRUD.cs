@@ -2,8 +2,10 @@
 using backend_app.DTO;
 using backend_app.Model;
 using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace backend_app.EmployeeRepository.BussinessLayer
 {
@@ -16,33 +18,10 @@ namespace backend_app.EmployeeRepository.BussinessLayer
             this.dBContext = dBContext;
         }
 
-        public async Task<(List<Employee>, int)> GetAllEmployee(int pageNumber, int pageSize, string sortBy = "id", bool ascending = true)
+        public async Task<List<Employee>> GetAllEmployee()
         {
-            var query = dBContext.Employees.AsQueryable();
-
-            // Sorting expression
-            Expression<Func<Employee, object>> orderByExpression = sortBy switch
-            {
-                "id" => e => e.Id,
-                "fullName" => e => e.FullName,
-                "email" => e => e.Email,
-                "phone" => e => e.Phone,
-                _ => e => e.FullName, // Default to sorting by ID
-            };
-
-            // Apply sorting
-            query = ascending ? query.OrderBy(orderByExpression) : query.OrderByDescending(orderByExpression);
-
-            var totalEmployees = await query.CountAsync();
-            var employees = await query
-                                .Skip((pageNumber - 1) * pageSize)
-                                .Take(pageSize)
-                                .ToListAsync();
-
-            return (employees, totalEmployees);
+            return await dBContext.Employees.ToListAsync();
         }
-
-
 
         public async Task<Employee> GetEmployeeById(int id)
         {

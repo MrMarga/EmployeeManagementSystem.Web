@@ -52,6 +52,7 @@ const Login = () => {
     checkValidity();
     const { EmailFlag, PasswordFlag, Email, Password } = formData;
     if (!EmailFlag && !PasswordFlag && Email !== "" && Password !== "") {
+      console.log("Form submitted successfully!");
       try {
         let data = {
           email: formData.Email,
@@ -71,7 +72,6 @@ const Login = () => {
           });
 
           navigate("/homePage"); // Navigate to the homepage route
-          console.log("Form submitted successfully!");
         } else {
           console.log("response", response.data.message);
         }
