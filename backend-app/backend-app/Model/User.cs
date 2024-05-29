@@ -13,4 +13,5 @@ namespace backend_app.Model
         public  ICollection<UserRole> UserRoles { get; set; }
 
     }
+
 }

@@ -11,6 +11,9 @@ import {
   TableRow,
   Paper,
   Button,
+  Pagination,
+  Box,
+  Typography,
 } from "@mui/material";
 import { NavLink } from "react-router-dom";
 import EmployeeServices from "../Services/EmployeeServices";
@@ -19,14 +22,22 @@ import Logout from "./Logout";
 const HomePage = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize] = useState(5);
+  const [totalEmployees, setTotalEmployees] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
       const employeeService = new EmployeeServices();
+      setLoading(true);
       try {
-        const response = await employeeService.GetAllEmployee();
+        const response = await employeeService.GetAllEmployee(
+          pageNumber,
+          pageSize
+        );
         if (response && response.data) {
-          setEmployees(response.data);
+          setEmployees(response.data.employees);
+          setTotalEmployees(response.data.totalCount);
         } else {
           console.error("Unexpected response structure:", response);
         }
@@ -38,7 +49,7 @@ const HomePage = () => {
     };
 
     fetchData();
-  }, []);
+  }, [pageNumber, pageSize]);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this employee?")) {
@@ -54,6 +65,10 @@ const HomePage = () => {
     }
   };
 
+  const handlePageChange = (event, value) => {
+    setPageNumber(value);
+  };
+
   if (loading) {
     return (
       <div className="loading">
@@ -65,17 +80,27 @@ const HomePage = () => {
   return (
     <>
       <Container>
-        <h1>Employee Management System</h1>
-        <h2>Employee List</h2>
-        <div>
-          <h3>
-            <NavLink to="/addEmployee">Add Employee</NavLink>
-          </h3>
-        </div>
+        <Typography variant="h3" component="h1" gutterBottom>
+          Employee Management System
+        </Typography>
+        <Typography variant="h4" component="h2" gutterBottom>
+          Employee List
+        </Typography>
+        <Box mb={3}>
+          <Button
+            variant="contained"
+            color="primary"
+            component={NavLink}
+            to="/addEmployee"
+          >
+            Add Employee
+          </Button>
+        </Box>
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
               <TableRow>
+                <TableCell>Emp.Id</TableCell>
                 <TableCell>Full Name</TableCell>
                 <TableCell>Email</TableCell>
                 <TableCell>Phone Number</TableCell>
@@ -84,19 +109,29 @@ const HomePage = () => {
             </TableHead>
             <TableBody>
               {employees.length > 0 ? (
-                employees.map((employee) => (
-                  <TableRow key={employee.id}>
+                employees.map((employee, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{employee.id}</TableCell>
                     <TableCell>{employee.fullName}</TableCell>
                     <TableCell>{employee.email}</TableCell>
                     <TableCell>{employee.phone}</TableCell>
                     <TableCell>
-                      <Button>
-                        <NavLink to={`/updateEmployee/${employee.id}`}>
-                          Edit
-                        </NavLink>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        size="small"
+                        component={NavLink}
+                        to={`/updateEmployee/${employee.id}`}
+                      >
+                        Edit
                       </Button>
-                      {" | "}
-                      <Button onClick={() => handleDelete(employee.id)}>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        size="small"
+                        onClick={() => handleDelete(employee.id)}
+                        style={{ marginLeft: "10px" }}
+                      >
                         Delete
                       </Button>
                     </TableCell>
@@ -104,12 +139,23 @@ const HomePage = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4}>No employees found</TableCell>
+                  <TableCell colSpan={5}>No employees found</TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
         </TableContainer>
+        <Box mt={3} display="flex" justifyContent="center">
+          <Pagination
+            count={Math.ceil(totalEmployees / pageSize)}
+            page={pageNumber}
+            onChange={handlePageChange}
+            color="primary"
+            size="large"
+            showFirstButton
+            showLastButton
+          />
+        </Box>
       </Container>
       <Container>
         <Logout />

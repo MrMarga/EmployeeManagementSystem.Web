@@ -1,8 +1,6 @@
 ﻿using backend_app.DTO;
 using backend_app.EmployeeRepository;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 
 namespace backend_app.Controllers
 {
@@ -34,25 +32,33 @@ namespace backend_app.Controllers
             var existingEmployee = await _employeeCRUD.GetEmployeeById(id);
             if (existingEmployee == null)
                 return NotFound();
-
-            // Update the employee details
+            
             existingEmployee.FullName = updatedEmployee.FullName;
             existingEmployee.Phone = updatedEmployee.Phone;
             existingEmployee.Email = updatedEmployee.Email;
 
-            // Save changes to the database
             await _employeeCRUD.UpdateEmployee(id, updatedEmployee);
 
             return NoContent();
         }
 
+
         [HttpGet]
-        
-        public async Task<IActionResult> GetAllEmployee()
+        public async Task<IActionResult> GetAllEmployee([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            var employees = await _employeeCRUD.GetAllEmployee();
-            return Ok(employees);
+            var (employees, totalEmployees) = await _employeeCRUD.GetAllEmployee(pageNumber, pageSize);
+
+            var response = new
+            {
+                TotalCount = totalEmployees,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                Employees = employees
+            };
+
+            return Ok(response);
         }
+
 
         [HttpPost]
         
