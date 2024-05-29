@@ -4,8 +4,10 @@ import Configuration from "../Configurations/Configuration";
 const axiosServices = new AxiosServices();
 
 export default class EmployeeServices {
-  GetAllEmployee() {
-    return axiosServices.get(Configuration.GetAllEmployee);
+  GetAllEmployee(pageNumber, pageSize) {
+    return axiosServices.get(
+      Configuration.GetAllEmployee(pageNumber, pageSize)
+    );
   }
 
   GetEmployeeById(id) {

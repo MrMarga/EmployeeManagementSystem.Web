@@ -26,7 +26,7 @@ namespace backend_app.Controllers
                 return BadRequest(new SignUpResponse { IsSuccess = false, Message = "Passwords do not match" });
             }
 
-            var isSuccess = await _userService.CreateUserAsync(signUpRequest.Name,signUpRequest.Username, signUpRequest.Email, signUpRequest.Password, signUpRequest.Role);
+            var isSuccess = await _userService.CreateUserAsync(signUpRequest.Name, signUpRequest.Username, signUpRequest.Email, signUpRequest.Password, signUpRequest.Role);
 
             if (isSuccess)
             {
@@ -64,21 +64,20 @@ namespace backend_app.Controllers
 
             string userDataJson = JsonSerializer.Serialize(userData);
 
-            
+
             var cookieOptions = new CookieOptions
             {
-                Expires = DateTime.UtcNow.AddMinutes(5),
+                Expires = DateTime.Now.AddMinutes(5),
                 HttpOnly = true,
                 IsEssential = true,
 
-                
+
             };
 
             Response.Cookies.Append("UserData", userDataJson, cookieOptions);
 
             return Ok(new LogInResponse { IsSuccess = true, Message = "Login successful", UserDataJson = userDataJson });
         }
-
 
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest forgotPasswordRequest)
@@ -88,36 +87,45 @@ namespace backend_app.Controllers
                 return BadRequest(new { Message = "Email is required" });
             }
 
-            var (token, createdAt) = await _userService.GeneratePasswordResetTokenWithCreatedAtAsync(forgotPasswordRequest.Email);
-            if (token == null)
+            try
             {
-                return BadRequest(new { Message = "User not found" });
+                var (token, createdAt) = await _userService.GeneratePasswordResetTokenWithCreatedAtAsync(forgotPasswordRequest.Email);
+
+                if (token == null)
+                {
+                    return BadRequest(new { Message = "User not found" });
+                }
+
+                var resetLink = Url.Action("ResetPassword", "Auth", new { email = forgotPasswordRequest.Email, token }, Request.Scheme);
+
+                var response = new
+                {
+                    ResetToken = token,
+                    ResetLink = resetLink,
+                    CreatedAt = createdAt,
+                    Message = "Reset token expires in 5 minutes",
+                    Email = forgotPasswordRequest.Email,
+                };
+
+                return Ok(response);
             }
-
-            var resetLink = Url.Action("ResetPassword", "Auth", new { token }, Request.Scheme);
-
-
-            var response = new
+            catch (Exception ex)
             {
-                ResetToken = token,
-                ResetLink = resetLink,
-                CreatedAt = createdAt,
-                Message = "Reset token expires in 5 minutes",
-                Email = forgotPasswordRequest.Email,
-            };
-
-            return Ok(response);
+                // Log or handle the exception
+                return StatusCode(500, new { Message = "Internal server error" });
+            }
         }
+
 
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword(ResetPasswordRequest resetPasswordRequest)
         {
-            if (string.IsNullOrEmpty(resetPasswordRequest.Email) || string.IsNullOrEmpty(resetPasswordRequest.Token)|| string.IsNullOrEmpty(resetPasswordRequest.NewPassword))
+            if (string.IsNullOrEmpty(resetPasswordRequest.Email) || string.IsNullOrEmpty(resetPasswordRequest.Token) || string.IsNullOrEmpty(resetPasswordRequest.NewPassword))
             {
                 return BadRequest(new { Message = "Email, reset token, and new password are required" });
             }
 
-            var result = await _userService.ResetPasswordAsync(resetPasswordRequest.Email, resetPasswordRequest.Token, resetPasswordRequest.NewPassword);
+            var result = await _userService.ResetPasswordAsync(resetPasswordRequest.Email, resetPasswordRequest.Token, resetPasswordRequest.NewPassword, resetPasswordRequest.OldPassword);
             if (result)
             {
                 return Ok(new { Message = "Password reset successfully" });
@@ -125,5 +133,7 @@ namespace backend_app.Controllers
 
             return BadRequest(new { Message = "Failed to reset password" });
         }
+
     }
+
 }

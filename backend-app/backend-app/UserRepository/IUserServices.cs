@@ -10,6 +10,6 @@ namespace backend_app.UserRepository
         string ComputeHash(string value);
         bool VerifyPassword(string hashedPassword, string providedPassword);
         Task<(string token, DateTime createdAt)> GeneratePasswordResetTokenWithCreatedAtAsync(string email);
-        Task<bool> ResetPasswordAsync(string email, string token, string newPassword);
+        Task<bool> ResetPasswordAsync(string email, string token, string newPassword, string oldPassword);
     }
 }

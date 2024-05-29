@@ -98,14 +98,27 @@ public class UserService : IUserServices
             var signature = ComputeHash(user.Id.ToString());
 
             var tokenWithSignature = $"{token}:{signature}";
-            var createdAt = DateTime.Now;
 
-            
-            var tokenExpirationTime = DateTime.Now.AddMinutes(5);
+           
+            var createdAt = DateTime.UtcNow;
+
+           
+            var tokenExpirationTime = DateTime.UtcNow.AddMinutes(5);
 
             var tokenWithExpiration = $"{tokenWithSignature}:{tokenExpirationTime:O}";
 
-            return (tokenWithExpiration, createdAt); 
+            var tokenEntity = new Tokens
+            {
+                Value = tokenWithExpiration,
+                CreatedAt = createdAt,
+                ExpirationTime = tokenExpirationTime,
+                UserId = user.Id // Assuming UserId is the foreign key in Token entity
+            };
+
+            _context.Tokens.Add(tokenEntity);
+            await _context.SaveChangesAsync();
+
+            return (tokenWithExpiration, createdAt);
         }
         catch (Exception ex)
         {
@@ -114,7 +127,8 @@ public class UserService : IUserServices
         }
     }
 
-    public async Task<bool> ResetPasswordAsync(string email, string tokenWithExpiration, string newPassword)
+
+    public async Task<bool> ResetPasswordAsync(string email, string tokenWithExpiration, string newPassword, string oldPassword)
     {
         var user = await _context.Users.SingleOrDefaultAsync(u => u.Email == email);
         if (user == null)
@@ -122,36 +136,40 @@ public class UserService : IUserServices
             return false; // User with the given email does not exist
         }
 
+        if (user.PasswordHash != ComputeHash(oldPassword))
+        {
+            return false; // Old password doesn't match
+        }
+
         try
         {
-            var parts = tokenWithExpiration.Split(':', 3); // Ensure we split into exactly 3 parts
+            var parts = tokenWithExpiration.Split(':', 3); 
             if (parts.Length != 3)
             {
-                return false; // Token format is invalid
+                return false; 
             }
 
             var receivedToken = parts[0];
-            var receivedId = parts[1];
-            var emailHash = ComputeHash(user.Id.ToString()); // Compute hash using user ID
-            var tokenExpirationString = parts[2]; // Corrected index
+            var receivedSignature = parts[1];
+            var receivedExpirationTime = parts[2];
 
-            // Parse the token expiration time using the "o" (round-trip) format specifier
-            if (!DateTime.TryParseExact(tokenExpirationString, "O", null, DateTimeStyles.RoundtripKind, out var tokenExpirationTime))
+            var tokenEntity = await _context.Tokens.SingleOrDefaultAsync(t => t.Value == tokenWithExpiration);
+            if (tokenEntity == null)
             {
-                return false; // Invalid expiration time format
+                return false; // Token not found in the database
             }
 
-            if (tokenExpirationTime < DateTime.Now)
+            if (tokenEntity.ExpirationTime < DateTime.UtcNow)
             {
-                return false; 
+                return false; // Token has expired
             }
 
-            if (receivedId != ComputeHash(user.Id.ToString()))
+            var computedSignature = ComputeHash(user.Id.ToString());
+            if (computedSignature != receivedSignature)
             {
-                return false; 
+                return false; // Token signature does not match
             }
 
-            
             user.PasswordHash = ComputeHash(newPassword);
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
@@ -160,11 +178,10 @@ public class UserService : IUserServices
         }
         catch (Exception ex)
         {
-            
+            // Log or handle the exception
             return false;
         }
     }
-
 
 
 }
