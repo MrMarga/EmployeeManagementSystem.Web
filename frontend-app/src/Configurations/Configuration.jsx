@@ -7,7 +7,8 @@ const Configuration = {
 
   //-----------------------EmployeeCRUD-----------------//
 
-  GetAllEmployee: "https://localhost:7298/api/Employee/GetAllEmployee",
+  GetAllEmployee: (pageNumber, pageSize) =>
+    `https://localhost:7298/api/Employee/GetAllEmployee?pageNumber=${pageNumber}&pageSize=${pageSize}`,
 
   GetEmployeeById: (id) =>
     `https://localhost:7298/api/Employee/GetEmployeeById/${id}`,

@@ -1,21 +1,20 @@
 ﻿using backend_app.Model;
 using Microsoft.EntityFrameworkCore;
 
-
 namespace backend_app.Data
 {
     public class ApplicationDbContext : DbContext
-    { 
+    {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
 
         }
 
         public DbSet<Employee> Employees { get; set; }
-
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet<Tokens> Tokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -33,11 +32,16 @@ namespace backend_app.Data
                 .HasOne(ur => ur.Role)
                 .WithMany(r => r.UserRoles)
                 .HasForeignKey(ur => ur.RoleId);
+
+            // Configure Tokens entity
+            modelBuilder.Entity<Tokens>()
+                .Property(t => t.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .IsRequired();
+
+            modelBuilder.Entity<Tokens>()
+                .Property(t => t.ExpirationTime)
+                .IsRequired();
         }
-
-
     }
-       
-   }  
-
-
+}

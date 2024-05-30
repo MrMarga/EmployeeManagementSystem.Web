@@ -7,6 +7,7 @@ using backend_app.EmployeeRepository;
 using backend_app.UserRepository;
 using backend_app.EmployeeRepository.BussinessLayer;
 
+using Twileloop.Timezone;
 
 namespace backend_app
 {
@@ -52,6 +53,9 @@ namespace backend_app
             // Configure logging
             var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
             var logger = loggerFactory.CreateLogger<Program>();
+
+            var utcTime  = DateTime.UtcNow;
+            var NepalTime = utcTime.UtcToSystemTimezone();
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
