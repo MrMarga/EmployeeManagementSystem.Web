@@ -6,13 +6,14 @@ import RadioGroup from "@mui/material/RadioGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
-import { useNavigate } from "react-router-dom"; // Import useNavigate hook
+import { useNavigate } from "react-router-dom";
 import AuthServices from "../Services/AuthServices";
+import { jwtDecode } from "jwt-decode";
 
 const authService = new AuthServices();
 
 const Login = () => {
-  const navigate = useNavigate(); // Initialize the navigate function
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     Email: "",
@@ -60,18 +61,15 @@ const Login = () => {
         };
         const response = await authService.Login(data);
         if (response.data.isSuccess) {
-          console.log("Login successful!", response);
+          const decodedToken = jwtDecode(response.data.token);
+          const userInfo = JSON.stringify(decodedToken);
+          console.log("UserInfo:", userInfo);
 
-          // Parse user data from JSON string to key-value format
-          const userData = JSON.parse(response.data.userDataJson);
+          localStorage.setItem("token", response.data.token);
+          localStorage.setItem("UserInfo", userInfo);
 
-          // Store user data in local storage as key-value pairs
-          Object.entries(userData).forEach(([key, value]) => {
-            localStorage.setItem(key, value);
-          });
-
-          navigate("/homePage"); // Navigate to the homepage route
-          console.log("Form submitted successfully!");
+          navigate("/homePage");
+          console.log("Logged In successfully!");
         } else {
           console.log("response", response.data.message);
         }

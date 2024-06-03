@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
 using backend_app.Model;
 using backend_app.UserRepository;
 
@@ -48,29 +47,11 @@ namespace backend_app.Controllers
                 return Unauthorized(new LogInResponse { IsSuccess = false, Message = "User does not have the required role" });
             }
 
-            var userRoles = user.UserRoles.Select(ur => ur.Role.Type).ToList();
+            var userDataJson = _userService.GenerateJwtTokenLogin(user); 
 
-            var userData = new
-            {
-                UserId = user.Id,
-                Email = user.Email,
-                Username = user.Username,
-                Roles = userRoles
-            };
-
-            string userDataJson = JsonSerializer.Serialize(userData);
-
-            var cookieOptions = new CookieOptions
-            {
-                Expires = DateTime.Now.AddMinutes(5),
-                HttpOnly = true,
-                IsEssential = true,
-            };
-
-            Response.Cookies.Append("UserData", userDataJson, cookieOptions);
-
-            return Ok(new LogInResponse { IsSuccess = true, Message = "Login successful", UserDataJson = userDataJson });
+            return Ok(new LogInResponse { IsSuccess = true, Message = "Login successful",Token = userDataJson });
         }
+
 
         [HttpPost("forgot-password")]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordRequest forgotPasswordRequest)
@@ -104,7 +85,7 @@ namespace backend_app.Controllers
             }
             catch (Exception)
             {
-               
+
                 return StatusCode(500, new { Message = "Internal server error" });
             }
         }
