@@ -21,7 +21,7 @@ const ForgotPassword = () => {
     setEmailFlag(email === "");
     if (email !== "") {
       try {
-        const response = await authService.ForgotPassword({ email });
+        authService.ForgotPassword({ email });
         if (response.data.resetLink) {
           console.log("Password reset email sent successfully!");
           console.log(response.data);

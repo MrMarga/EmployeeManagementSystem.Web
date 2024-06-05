@@ -13,6 +13,6 @@ namespace backend_app.Model
     {
         public bool IsSuccess { get; set; }
         public string Message { get; set; } = string.Empty;
-        public string UserDataJson { get; internal set; }
+        public string Token { get; set; }
     }
 }

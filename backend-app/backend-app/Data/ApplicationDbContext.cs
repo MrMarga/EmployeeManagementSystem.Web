@@ -1,5 +1,5 @@
-﻿using backend_app.Model;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using backend_app.Model;
 
 namespace backend_app.Data
 {
@@ -14,7 +14,7 @@ namespace backend_app.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
-        public DbSet<Tokens> Tokens { get; set; }
+        public DbSet<Tokens> Tokens { get; set; } 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -33,15 +33,7 @@ namespace backend_app.Data
                 .WithMany(r => r.UserRoles)
                 .HasForeignKey(ur => ur.RoleId);
 
-            // Configure Tokens entity
-            modelBuilder.Entity<Tokens>()
-                .Property(t => t.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .IsRequired();
-
-            modelBuilder.Entity<Tokens>()
-                .Property(t => t.ExpirationTime)
-                .IsRequired();
+           
         }
     }
 }

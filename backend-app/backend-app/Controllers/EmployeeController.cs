@@ -1,9 +1,12 @@
 ﻿using backend_app.DTO;
 using backend_app.EmployeeRepository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+
 
 namespace backend_app.Controllers
 {
+    [Authorize]
     [Route("api/[controller]/[Action]")]
     [ApiController]
     public class EmployeeController : ControllerBase
@@ -16,7 +19,6 @@ namespace backend_app.Controllers
         }
 
         [HttpGet("{id}")]
-       
         public async Task<IActionResult> GetEmployeeById(int id)
         {
             var employee = await _employeeCRUD.GetEmployeeById(id);
@@ -27,12 +29,13 @@ namespace backend_app.Controllers
         }
 
         [HttpPut("{id}/update")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateEmployee(int id, EmployeeDTO updatedEmployee)
         {
             var existingEmployee = await _employeeCRUD.GetEmployeeById(id);
             if (existingEmployee == null)
                 return NotFound();
-            
+
             existingEmployee.FullName = updatedEmployee.FullName;
             existingEmployee.Phone = updatedEmployee.Phone;
             existingEmployee.Email = updatedEmployee.Email;
@@ -41,7 +44,6 @@ namespace backend_app.Controllers
 
             return NoContent();
         }
-
 
         [HttpGet]
         public async Task<IActionResult> GetAllEmployee([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
@@ -59,9 +61,8 @@ namespace backend_app.Controllers
             return Ok(response);
         }
 
-
         [HttpPost]
-        
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddEmployee(EmployeeDTO employee)
         {
             await _employeeCRUD.AddEmployee(employee);
@@ -69,6 +70,7 @@ namespace backend_app.Controllers
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteEmployee(int id)
         {
             var existingEmployee = await _employeeCRUD.GetEmployeeById(id);
@@ -78,5 +80,7 @@ namespace backend_app.Controllers
             await _employeeCRUD.DeleteEmployee(id);
             return NoContent();
         }
+
+        
     }
 }

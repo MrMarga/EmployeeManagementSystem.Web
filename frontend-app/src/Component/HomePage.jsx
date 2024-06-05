@@ -18,6 +18,7 @@ import {
 import { NavLink } from "react-router-dom";
 import EmployeeServices from "../Services/EmployeeServices";
 import Logout from "./Logout";
+import { jwtDecode } from "jwt-decode";
 
 const HomePage = () => {
   const [employees, setEmployees] = useState([]);
@@ -69,6 +70,15 @@ const HomePage = () => {
     setPageNumber(value);
   };
 
+  const isAdmin = () => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const decodedToken = jwtDecode(token);
+      return decodedToken.role === "Admin";
+    }
+    return false;
+  };
+
   if (loading) {
     return (
       <div className="loading">
@@ -104,37 +114,40 @@ const HomePage = () => {
                 <TableCell>Full Name</TableCell>
                 <TableCell>Email</TableCell>
                 <TableCell>Phone Number</TableCell>
-                <TableCell>Actions</TableCell>
+                {isAdmin() && <TableCell>Actions</TableCell>}
               </TableRow>
             </TableHead>
             <TableBody>
               {employees.length > 0 ? (
-                employees.map((employee, index) => (
-                  <TableRow key={index}>
+                employees.map((employee) => (
+                  <TableRow key={employee.id}>
                     <TableCell>{employee.id}</TableCell>
                     <TableCell>{employee.fullName}</TableCell>
                     <TableCell>{employee.email}</TableCell>
                     <TableCell>{employee.phone}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        size="small"
-                        component={NavLink}
-                        to={`/updateEmployee/${employee.id}`}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="secondary"
-                        size="small"
-                        onClick={() => handleDelete(employee.id)}
-                        style={{ marginLeft: "10px" }}
-                      >
-                        Delete
-                      </Button>
-                    </TableCell>
+                    {isAdmin() && (
+                      <TableCell>
+                        <Button
+                          variant="contained"
+                          color="primary"
+                          size="small"
+                          component={NavLink}
+                          to={`/updateEmployee/${employee.id}`}
+                        >
+                          Edit
+                        </Button>
+
+                        <Button
+                          variant="contained"
+                          color="secondary"
+                          size="small"
+                          onClick={() => handleDelete(employee.id)}
+                          style={{ marginLeft: "10px" }}
+                        >
+                          Delete
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))
               ) : (
