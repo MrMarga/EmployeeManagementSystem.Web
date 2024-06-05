@@ -11,9 +11,10 @@ import HomePage from "./Component/HomePage";
 import AddEmployee from "./Component/AddEmployee";
 import UpdateEmployee from "./Component/UpdateEmployee";
 import ProtectedRoute from "./Component/ProtectedRoute";
-import TrendsPage from "./Component/TrendsPage";
+import ProtectedLoginRoute from "./Component/ProtectedLoginRoute";
 import ForgotPassword from "./Component/ForgetPassword";
 import PasswordReset from "./Component/PasswordReset";
+import ProtectedServiceRoute from "./Component/ProtectedServiceRoute";
 
 function App() {
   return (
@@ -21,7 +22,10 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<SignUp />} />
-        <Route path="/login" element={<Login />} />
+        <Route
+          path="/login"
+          element={<ProtectedLoginRoute element={<Login />} />}
+        />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route
           path="/reset-password/:email/:token"
@@ -35,15 +39,11 @@ function App() {
         />
         <Route
           path="/addEmployee"
-          element={<ProtectedRoute element={<AddEmployee />} />}
+          element={<ProtectedServiceRoute element={<AddEmployee />} />}
         />
         <Route
           path="/updateEmployee/:id"
-          element={<ProtectedRoute element={<UpdateEmployee />} />}
-        />
-        <Route
-          path="/trendsPage"
-          element={<ProtectedRoute element={<TrendsPage />} />}
+          element={<ProtectedServiceRoute element={<UpdateEmployee />} />}
         />
 
         {/* Fallback Route */}

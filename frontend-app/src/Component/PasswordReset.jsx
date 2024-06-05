@@ -8,6 +8,7 @@ const authService = new AuthServices();
 const PasswordReset = () => {
   const { email, token } = useParams(); // Extract email from URL params
   const [password, setPassword] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
 
@@ -21,6 +22,7 @@ const PasswordReset = () => {
       const response = await authService.ResetPassword({
         token,
         email,
+        oldPassword: oldPassword,
         newPassword: password,
       });
       window.location.href = "/";
@@ -35,6 +37,13 @@ const PasswordReset = () => {
     <div>
       <Typography variant="h4">Reset Password</Typography>
       <form onSubmit={handleResetPassword}>
+        <TextField
+          label="Old Password"
+          type="password"
+          value={oldPassword}
+          onChange={(e) => setOldPassword(e.target.value)}
+          required
+        />
         <TextField
           label="New Password"
           type="password"

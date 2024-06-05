@@ -1,11 +1,12 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.EntityFrameworkCore;
 using backend_app.Data;
-using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using backend_app.EmployeeRepository;
 using backend_app.UserRepository;
 using backend_app.EmployeeRepository.BussinessLayer;
+using Microsoft.AspNetCore.Authentication;
 
 
 namespace backend_app
@@ -16,7 +17,7 @@ namespace backend_app
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // Register services
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -25,23 +26,32 @@ namespace backend_app
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("Backend-DB")));
 
-            // Configure cookie settings
-            builder.Services.Configure<CookiePolicyOptions>(options =>
+            // Add JWT authentication
+            var jwtSecretKey = JwtSecretKeyGenerator.GenerateJwtSecretKey();
+            builder.Configuration["Jwt:Key"] = jwtSecretKey;
+
+            builder.Services.AddAuthentication(options =>
             {
-                options.MinimumSameSitePolicy = SameSiteMode.None;
-                options.HttpOnly = HttpOnlyPolicy.Always;
-                options.Secure = CookieSecurePolicy.Always;
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                    
+            };
             });
 
-            // Configure authentication
-            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddCookie(options =>
-                {
-                    options.LoginPath = "/api/auth/login";
-                    options.AccessDeniedPath = "/api/auth/accessdenied";
-                    options.ExpireTimeSpan = TimeSpan.FromMinutes(5);
-                    options.SlidingExpiration = true;
-                });
+            Console.WriteLine(jwtSecretKey);
+            
 
             // Injecting Dependencies
             builder.Services.AddScoped<IUserServices, UserService>();
@@ -53,7 +63,7 @@ namespace backend_app
             var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
             var logger = loggerFactory.CreateLogger<Program>();
 
-            // Configure the HTTP request pipeline.
+            // Configure the HTTP request pipeline
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -64,26 +74,23 @@ namespace backend_app
 
             app.UseRouting();
 
-            // Enable authentication and authorization
-            app.UseAuthentication();
-            app.UseAuthorization();
-
-            // Enable CORS
+            // Enable CORS before authentication and authorization
             app.UseCors(x => x
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .SetIsOriginAllowed(origin => true)
                 .AllowCredentials());
 
+            // Enable authentication and authorization
+            app.UseAuthentication();
+            app.UseAuthorization();
+
             // Map logout endpoint
             app.Map("/api/auth/logout", app =>
             {
                 app.Run(async context =>
                 {
-                    // Sign out the user
                     await context.SignOutAsync();
-
-                    // Redirect to login page or any other page after logout
                     context.Response.Redirect("/api/auth/login");
                 });
             });

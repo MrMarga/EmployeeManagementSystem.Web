@@ -1,21 +1,20 @@
-﻿using backend_app.Model;
-using Microsoft.EntityFrameworkCore;
-
+﻿using Microsoft.EntityFrameworkCore;
+using backend_app.Model;
 
 namespace backend_app.Data
 {
     public class ApplicationDbContext : DbContext
-    { 
+    {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
 
         }
 
         public DbSet<Employee> Employees { get; set; }
-
         public DbSet<User> Users { get; set; }
         public DbSet<Role> Roles { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
+        public DbSet<Tokens> Tokens { get; set; } 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -33,11 +32,8 @@ namespace backend_app.Data
                 .HasOne(ur => ur.Role)
                 .WithMany(r => r.UserRoles)
                 .HasForeignKey(ur => ur.RoleId);
+
+           
         }
-
-
     }
-       
-   }  
-
-
+}
