@@ -88,9 +88,11 @@ public class UserService : IUserServices
 
     public async Task<AuthTokens> GenerateJwtTokenLogin(User user)
     {
+        // Step 1: Initialize Token Handler and Key
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
 
+        // Step 2: Create Claims
         var claims = new List<Claim>
     {
         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -105,6 +107,7 @@ public class UserService : IUserServices
         claims.Add(new Claim(JwtRegisteredClaimNames.Iss, _configuration["Jwt:Issuer"]));
         claims.Add(new Claim(JwtRegisteredClaimNames.Aud, _configuration["Jwt:Audience"]));
 
+        // Step 3: Create Access Token Descriptor
         var accessTokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
@@ -112,35 +115,18 @@ public class UserService : IUserServices
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
 
+        // Step 4: Generate Access Token
         var accessToken = tokenHandler.CreateToken(accessTokenDescriptor);
         var accessTokenString = tokenHandler.WriteToken(accessToken);
 
-        // Generate device ID
+        // Step 5: Generate Device ID
         string deviceId = GenerateDeviceId(user);
 
-        // Check if a refresh token already exists for the specific device and user
-        var existingRefreshToken = await GetExistingRefreshTokenAsync(user.Id, deviceId);
-        string refreshToken;
+        // Step 6: Generate New Refresh Token
+        string refreshToken = GenerateRefreshToken();
+        await StoreRefreshToken(refreshToken, user.Id, deviceId, DateTime.UtcNow.AddMinutes(15));
 
-        if (existingRefreshToken != null && existingRefreshToken.ExpirationDate > DateTime.UtcNow)
-        {
-            refreshToken = existingRefreshToken.Token;
-        }
-        else
-        {
-            // Check if a refresh token already exists for the device ID
-            var existingRefreshTokenForDevice = await GetExistingRefreshTokenForDeviceAsync(deviceId);
-            if (existingRefreshTokenForDevice != null && existingRefreshTokenForDevice.ExpirationDate > DateTime.UtcNow)
-            {
-                refreshToken = existingRefreshTokenForDevice.Token;
-            }
-            else
-            {
-                refreshToken = GenerateRefreshToken();
-                await StoreRefreshToken(refreshToken, user.Id, deviceId, DateTime.UtcNow.AddMinutes(15));
-            }
-        }
-
+        // Step 7: Return Auth Tokens
         return new AuthTokens
         {
             AccessToken = accessTokenString,
@@ -149,22 +135,12 @@ public class UserService : IUserServices
         };
     }
 
-    private async Task<RefreshToken> GetExistingRefreshTokenAsync(int userId, string deviceId)
-    {
-        return await _context.RefreshTokens
-            .SingleOrDefaultAsync(t => t.UserId == userId && t.DeviceId == deviceId && t.ExpirationDate > DateTime.UtcNow);
-    }
 
-    private async Task<RefreshToken> GetExistingRefreshTokenForDeviceAsync(string deviceId)
-    {
-        return await _context.RefreshTokens
-            .SingleOrDefaultAsync(t => t.DeviceId == deviceId && t.ExpirationDate > DateTime.UtcNow);
-    }
 
     private string GenerateDeviceId(User user)
     {
         return $"{user.Id}-{Guid.NewGuid()}";
-    } 
+    }
 
     private async Task StoreRefreshToken(string refreshToken, int userId, string deviceId, DateTime expirationDate)
     {
@@ -173,7 +149,6 @@ public class UserService : IUserServices
 
         if (existingToken != null)
         {
-            existingToken.DeviceId = deviceId;
             existingToken.Token = refreshToken;
             existingToken.CreatedAt = DateTime.UtcNow;
             existingToken.ExpirationDate = expirationDate;
@@ -246,31 +221,25 @@ public class UserService : IUserServices
         var accessTokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddMinutes(10),
+            Expires = DateTime.UtcNow.AddMinutes(2),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
 
         var accessToken = tokenHandler.CreateToken(accessTokenDescriptor);
         var accessTokenString = tokenHandler.WriteToken(accessToken);
 
-        // Optionally rotate refresh token here if required
-        storedToken.Token = GenerateRefreshToken();
-        storedToken.CreatedAt = DateTime.UtcNow;
+        // Update the existing refresh token expiration date
         storedToken.ExpirationDate = DateTime.UtcNow.AddMinutes(15);
         _context.RefreshTokens.Update(storedToken);
         await _context.SaveChangesAsync();
 
-        // Return the new access token and the new refresh token
+        // Return the new access token and the existing refresh token
         return new AuthTokens
         {
             AccessToken = accessTokenString,
             RefreshToken = storedToken.Token
         };
     }
-
-
-
-
 
     public async Task<(string token, string createdAt)> GeneratePasswordResetTokenWithCreatedAtAsync(string email)
     {
