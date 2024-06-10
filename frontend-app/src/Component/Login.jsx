@@ -82,6 +82,7 @@ const Login = () => {
 
           const accessToken = response.data.tokens.accessToken;
           const refreshToken = response.data.tokens.refreshToken;
+          const deviceId = response.data.tokens.deviceID;
           const userInfo = jwtDecode(accessToken);
           const expTime = getTokenExpiration(accessToken);
           const decodeExpirationTime = (expTime) => {
@@ -92,6 +93,7 @@ const Login = () => {
           console.log("Expiration Date:", expirationTime);
 
           localStorage.setItem("AccessToken", accessToken);
+          localStorage.setItem("deviceId", deviceId);
           localStorage.setItem("RefreshToken", refreshToken);
           localStorage.setItem("Exp Time", expirationTime);
           localStorage.setItem("UserInfo", JSON.stringify(userInfo));

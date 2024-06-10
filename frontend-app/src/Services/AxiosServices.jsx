@@ -31,10 +31,12 @@ axiosInstance.interceptors.response.use(
       originalRequest._retry = true;
 
       const refreshToken = localStorage.getItem("RefreshToken");
+      const deviceId = localStorage.getItem("deviceId");
 
       try {
         const response = await axios.post(`${BASE_URL}/Auth/refresh-token`, {
           refreshToken,
+          deviceId,
         });
 
         const newAccessToken = response.data.accessToken;

@@ -12,7 +12,8 @@ namespace backend_app.Model
     public class LogInResponse
     {
         public bool IsSuccess { get; set; }
-        public string Message { get; set; } = string.Empty;
+        public string Message { get; set; }
         public AuthTokens Tokens { get; set; }
+
     }
 }

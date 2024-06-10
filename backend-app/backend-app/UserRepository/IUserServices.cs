@@ -10,7 +10,7 @@ namespace backend_app.UserRepository
         string ComputeHash(string value);
         bool VerifyPassword(string hashedPassword, string providedPassword);
         Task<AuthTokens> GenerateJwtTokenLogin(User user);
-        Task<AuthTokens> RefreshTokensAsync(string refreshToken);
+        Task<AuthTokens> RefreshTokensAsync(string refreshToken, string deviceId);
         Task<(string token, string createdAt)> GeneratePasswordResetTokenWithCreatedAtAsync(string email);
         Task<bool> ResetPasswordAsync(string email, string token, string newPassword, string oldPassword);
     }

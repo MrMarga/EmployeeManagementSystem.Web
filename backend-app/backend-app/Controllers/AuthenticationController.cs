@@ -20,7 +20,7 @@ namespace backend_app.Controllers
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
         {
-            var tokens = await _userService.RefreshTokensAsync(request.RefreshToken);
+            var tokens = await _userService.RefreshTokensAsync(request.RefreshToken, request.DeviceId);
 
             if (tokens == null)
             {
@@ -29,6 +29,7 @@ namespace backend_app.Controllers
 
             return Ok(tokens);
         }
+
 
         [HttpPost("signup")]
         public async Task<IActionResult> SignUp(SignUpRequest signUpRequest)
@@ -62,10 +63,12 @@ namespace backend_app.Controllers
                 return Unauthorized(new LogInResponse { IsSuccess = false, Message = "User does not have the required role" });
             }
 
-            var userDataJson = _userService.GenerateJwtTokenLogin(user);
+            var userDataJson = await _userService.GenerateJwtTokenLogin(user);
 
-            return Ok(new LogInResponse { IsSuccess = true, Message = "Login successful",Tokens = await userDataJson });
+            return Ok(new LogInResponse { IsSuccess = true, Message = "Login successful", Tokens = userDataJson });
         }
+
+
 
 
         [HttpPost("forgot-password")]
