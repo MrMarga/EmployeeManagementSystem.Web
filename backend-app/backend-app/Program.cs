@@ -7,7 +7,7 @@ using backend_app.EmployeeRepository;
 using backend_app.UserRepository;
 using backend_app.EmployeeRepository.BussinessLayer;
 using Microsoft.AspNetCore.Authentication;
-
+using Microsoft.OpenApi.Models;
 
 namespace backend_app
 {
@@ -20,7 +20,38 @@ namespace backend_app
             // Register services
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Pappa´s API", Version = "v1" });
+
+                // Define the OAuth2.0 scheme that's in use (i.e., Implicit Flow)
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer"
+                });
+
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            },
+                            Scheme = "oauth2",
+                            Name = "Bearer",
+                            In = ParameterLocation.Header,
+                        },
+                        new List<string>()
+                    }
+                });
+            });
 
             // Registering Database
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -30,11 +61,7 @@ namespace backend_app
             var jwtSecretKey = JwtSecretKeyGenerator.GenerateJwtSecretKey();
             builder.Configuration["Jwt:Key"] = jwtSecretKey;
 
-            builder.Services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -45,13 +72,10 @@ namespace backend_app
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = builder.Configuration["Jwt:Issuer"],
                     ValidAudience = builder.Configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
-                    
-            };
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+                    ClockSkew = TimeSpan.Zero
+                };
             });
-
-            Console.WriteLine(jwtSecretKey);
-            
 
             // Injecting Dependencies
             builder.Services.AddScoped<IUserServices, UserService>();
@@ -71,7 +95,6 @@ namespace backend_app
             }
 
             app.UseHttpsRedirection();
-
             app.UseRouting();
 
             // Enable CORS before authentication and authorization

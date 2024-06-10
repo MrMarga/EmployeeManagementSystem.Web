@@ -33,11 +33,14 @@ const Login = () => {
   };
 
   const checkValidity = () => {
-    setFormData({
-      ...formData,
-      EmailFlag: formData.Email === "",
-      PasswordFlag: formData.Password === "",
-    });
+    const emailFlag = formData.Email === "";
+    const passwordFlag = formData.Password === "";
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      EmailFlag: emailFlag,
+      PasswordFlag: passwordFlag,
+    }));
+    return !emailFlag && !passwordFlag;
   };
 
   const AccountAlready = (e) => {
@@ -50,23 +53,51 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    checkValidity();
-    const { EmailFlag, PasswordFlag, Email, Password } = formData;
-    if (!EmailFlag && !PasswordFlag && Email !== "" && Password !== "") {
+    const isValid = checkValidity();
+    const { Email, Password } = formData;
+    if (isValid && Email !== "" && Password !== "") {
       try {
-        let data = {
+        const data = {
           email: formData.Email,
           password: formData.Password,
           Role: formData.RoleValue,
         };
         const response = await authService.Login(data);
         if (response.data.isSuccess) {
-          const decodedToken = jwtDecode(response.data.token);
-          const userInfo = JSON.stringify(decodedToken);
-          console.log("UserInfo:", userInfo);
+          console.log(response.data.tokens);
 
-          localStorage.setItem("token", response.data.token);
-          localStorage.setItem("UserInfo", userInfo);
+          const getTokenExpiration = (accessToken) => {
+            try {
+              const decoded = jwtDecode(accessToken);
+              console.log(decoded);
+              if (decoded && decoded.exp) {
+                return decoded.exp;
+              }
+              return null;
+            } catch (error) {
+              console.error("Invalid token", error);
+              return null;
+            }
+          };
+
+          const accessToken = response.data.tokens.accessToken;
+          const refreshToken = response.data.tokens.refreshToken;
+          const deviceId = response.data.tokens.deviceID;
+          const userInfo = jwtDecode(accessToken);
+          const expTime = getTokenExpiration(accessToken);
+          const decodeExpirationTime = (expTime) => {
+            const date = new Date(expTime * 1000);
+            return date.toLocaleString();
+          };
+          const expirationTime = decodeExpirationTime(expTime);
+          console.log("Expiration Date:", expirationTime);
+
+          localStorage.setItem("AccessToken", accessToken);
+          localStorage.setItem("deviceId", deviceId);
+          localStorage.setItem("RefreshToken", refreshToken);
+          localStorage.setItem("Exp Time", expirationTime);
+          localStorage.setItem("UserInfo", JSON.stringify(userInfo));
+          localStorage.setItem("UserRole", userInfo.role);
 
           navigate("/homePage");
           console.log("Logged In successfully!");

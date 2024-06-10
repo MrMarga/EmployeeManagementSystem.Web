@@ -18,7 +18,6 @@ import {
 import { NavLink } from "react-router-dom";
 import EmployeeServices from "../Services/EmployeeServices";
 import Logout from "./Logout";
-import { jwtDecode } from "jwt-decode";
 
 const HomePage = () => {
   const [employees, setEmployees] = useState([]);
@@ -71,10 +70,10 @@ const HomePage = () => {
   };
 
   const isAdmin = () => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      const decodedToken = jwtDecode(token);
-      return decodedToken.role === "Admin";
+    const role = localStorage.getItem("UserRole");
+    if (role) {
+      const userRole = role;
+      return userRole === "Admin";
     }
     return false;
   };

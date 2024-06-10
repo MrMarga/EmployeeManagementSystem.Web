@@ -9,7 +9,6 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
-
 public class UserService : IUserServices
 {
     private readonly ApplicationDbContext _context;
@@ -87,44 +86,160 @@ public class UserService : IUserServices
         return ComputeHash(providedPassword) == hashedPassword;
     }
 
-
-    public string GenerateJwtTokenLogin(User user)
+    public async Task<AuthTokens> GenerateJwtTokenLogin(User user)
     {
+        // Step 1: Initialize Token Handler and Key
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
 
-        // Create claims for user ID, email, roles, issuer, and audience
+        // Step 2: Create Claims
         var claims = new List<Claim>
     {
         new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
         new Claim(ClaimTypes.Email, user.Email),
     };
 
-        // Add user roles as claims
         foreach (var userRole in user.UserRoles)
         {
             claims.Add(new Claim(ClaimTypes.Role, userRole.Role.Type));
         }
 
-        // Add issuer and audience claims
         claims.Add(new Claim(JwtRegisteredClaimNames.Iss, _configuration["Jwt:Issuer"]));
         claims.Add(new Claim(JwtRegisteredClaimNames.Aud, _configuration["Jwt:Audience"]));
 
-        // Create token descriptor
-        var tokenDescriptor = new SecurityTokenDescriptor
+        // Step 3: Create Access Token Descriptor
+        var accessTokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddMinutes(60),
+            Expires = DateTime.UtcNow.AddMinutes(2),
             SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
         };
 
-        // Generate and write token
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        var tokenString = tokenHandler.WriteToken(token);
+        // Step 4: Generate Access Token
+        var accessToken = tokenHandler.CreateToken(accessTokenDescriptor);
+        var accessTokenString = tokenHandler.WriteToken(accessToken);
 
-        return tokenString;
+        // Step 5: Generate Device ID
+        string deviceId = GenerateDeviceId(user);
+
+        // Step 6: Generate New Refresh Token
+        string refreshToken = GenerateRefreshToken();
+        await StoreRefreshToken(refreshToken, user.Id, deviceId, DateTime.UtcNow.AddMinutes(15));
+
+        // Step 7: Return Auth Tokens
+        return new AuthTokens
+        {
+            AccessToken = accessTokenString,
+            DeviceID = deviceId,
+            RefreshToken = refreshToken
+        };
     }
 
+
+
+    private string GenerateDeviceId(User user)
+    {
+        return $"{user.Id}-{Guid.NewGuid()}";
+    }
+
+    private async Task StoreRefreshToken(string refreshToken, int userId, string deviceId, DateTime expirationDate)
+    {
+        var existingToken = await _context.RefreshTokens
+            .SingleOrDefaultAsync(t => t.UserId == userId && t.DeviceId == deviceId);
+
+        if (existingToken != null)
+        {
+            existingToken.Token = refreshToken;
+            existingToken.CreatedAt = DateTime.UtcNow;
+            existingToken.ExpirationDate = expirationDate;
+            _context.RefreshTokens.Update(existingToken);
+        }
+        else
+        {
+            var tokenEntity = new RefreshToken
+            {
+                Token = refreshToken,
+                UserId = userId,
+                DeviceId = deviceId,
+                CreatedAt = DateTime.UtcNow,
+                ExpirationDate = expirationDate
+            };
+            _context.RefreshTokens.Add(tokenEntity);
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    private string GenerateRefreshToken()
+    {
+        var randomNumber = new byte[32];
+        using var rng = RandomNumberGenerator.Create();
+        rng.GetBytes(randomNumber);
+        return Convert.ToBase64String(randomNumber);
+    }
+
+    public async Task<AuthTokens> RefreshTokensAsync(string refreshToken, string deviceId)
+    {
+        // Find the stored refresh token
+        var storedToken = await _context.RefreshTokens
+            .SingleOrDefaultAsync(t => t.Token == refreshToken && t.DeviceId == deviceId);
+
+        // Check if the refresh token exists and is not expired
+        if (storedToken == null || storedToken.ExpirationDate < DateTime.UtcNow)
+        {
+            return null;
+        }
+
+        // Find the user associated with the refresh token
+        var user = await _context.Users.Include(u => u.UserRoles)
+                                       .ThenInclude(ur => ur.Role)
+                                       .SingleOrDefaultAsync(u => u.Id == storedToken.UserId);
+
+        if (user == null)
+        {
+            return null;
+        }
+
+        // Generate a new access token
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]);
+
+        var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim(ClaimTypes.Email, user.Email),
+    };
+
+        foreach (var userRole in user.UserRoles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, userRole.Role.Type));
+        }
+
+        claims.Add(new Claim(JwtRegisteredClaimNames.Iss, _configuration["Jwt:Issuer"]));
+        claims.Add(new Claim(JwtRegisteredClaimNames.Aud, _configuration["Jwt:Audience"]));
+
+        var accessTokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(claims),
+            Expires = DateTime.UtcNow.AddMinutes(2),
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+        };
+
+        var accessToken = tokenHandler.CreateToken(accessTokenDescriptor);
+        var accessTokenString = tokenHandler.WriteToken(accessToken);
+
+        // Update the existing refresh token expiration date
+        storedToken.ExpirationDate = DateTime.UtcNow.AddMinutes(15);
+        _context.RefreshTokens.Update(storedToken);
+        await _context.SaveChangesAsync();
+
+        // Return the new access token and the existing refresh token
+        return new AuthTokens
+        {
+            AccessToken = accessTokenString,
+            RefreshToken = storedToken.Token
+        };
+    }
 
     public async Task<(string token, string createdAt)> GeneratePasswordResetTokenWithCreatedAtAsync(string email)
     {
@@ -226,5 +341,4 @@ public class UserService : IUserServices
             return false;
         }
     }
-
 }

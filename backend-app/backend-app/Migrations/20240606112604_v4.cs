@@ -5,7 +5,7 @@
 namespace backend_app.Migrations
 {
     /// <inheritdoc />
-    public partial class v8 : Migration
+    public partial class v4 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
