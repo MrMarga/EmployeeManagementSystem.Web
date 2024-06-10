@@ -1,15 +1,13 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
 
 const ProtectedServiceRoute = ({ element }) => {
-  const token = localStorage.getItem("token");
+  const role = localStorage.getItem("UserRole");
   let isAdmin = false;
 
-  if (token) {
+  if (role) {
     try {
-      const decodedToken = jwtDecode(token);
-      isAdmin = decodedToken.role === "Admin";
+      isAdmin = role === "Admin";
     } catch (error) {
       console.error("Error decoding token:", error);
     }

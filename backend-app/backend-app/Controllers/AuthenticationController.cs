@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using backend_app.Model;
 using backend_app.UserRepository;
+using Microsoft.AspNetCore.Authorization;
 
 namespace backend_app.Controllers
 {
+    
     [ApiController]
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
@@ -13,6 +15,19 @@ namespace backend_app.Controllers
         public AuthController(IUserServices userService)
         {
             _userService = userService;
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+        {
+            var tokens = await _userService.RefreshTokensAsync(request.RefreshToken);
+
+            if (tokens == null)
+            {
+                return Unauthorized(new { Message = "Invalid refresh token" });
+            }
+
+            return Ok(tokens);
         }
 
         [HttpPost("signup")]
@@ -47,9 +62,9 @@ namespace backend_app.Controllers
                 return Unauthorized(new LogInResponse { IsSuccess = false, Message = "User does not have the required role" });
             }
 
-            var userDataJson = _userService.GenerateJwtTokenLogin(user); 
+            var userDataJson = _userService.GenerateJwtTokenLogin(user);
 
-            return Ok(new LogInResponse { IsSuccess = true, Message = "Login successful",Token = userDataJson });
+            return Ok(new LogInResponse { IsSuccess = true, Message = "Login successful",Tokens = await userDataJson });
         }
 
 

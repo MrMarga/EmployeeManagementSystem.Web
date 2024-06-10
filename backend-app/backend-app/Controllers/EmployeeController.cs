@@ -28,6 +28,7 @@ namespace backend_app.Controllers
             return Ok(employee);
         }
 
+        
         [HttpPut("{id}/update")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateEmployee(int id, EmployeeDTO updatedEmployee)
@@ -46,6 +47,7 @@ namespace backend_app.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetAllEmployee([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             var (employees, totalEmployees) = await _employeeCRUD.GetAllEmployee(pageNumber, pageSize);
@@ -61,6 +63,7 @@ namespace backend_app.Controllers
             return Ok(response);
         }
 
+       
         [HttpPost]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AddEmployee(EmployeeDTO employee)
