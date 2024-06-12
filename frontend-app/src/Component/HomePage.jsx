@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 import { NavLink } from "react-router-dom";
 import EmployeeServices from "../Services/EmployeeServices";
+import AuthServices from "../Services/AuthServices";
 import Logout from "./Logout";
 
 const HomePage = () => {
@@ -25,24 +26,36 @@ const HomePage = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize] = useState(5);
   const [totalEmployees, setTotalEmployees] = useState(0);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       const employeeService = new EmployeeServices();
+      const authServices = new AuthServices();
       setLoading(true);
       try {
-        const response = await employeeService.GetAllEmployee(
+        const employeeResponse = await employeeService.GetAllEmployee(
           pageNumber,
           pageSize
         );
-        if (response && response.data) {
-          setEmployees(response.data.employees);
-          setTotalEmployees(response.data.totalCount);
+        if (employeeResponse && employeeResponse.data) {
+          setEmployees(employeeResponse.data.employees);
+          setTotalEmployees(employeeResponse.data.totalCount);
         } else {
-          console.error("Unexpected response structure:", response);
+          console.error("Unexpected response structure:", employeeResponse);
+        }
+
+        const userId = localStorage.getItem("UserId");
+        if (userId) {
+          const userResponse = await authServices.GetUserById(userId);
+          if (userResponse) {
+            setUser(userResponse);
+          } else {
+            console.error("Unexpected response structure:", userResponse);
+          }
         }
       } catch (error) {
-        console.error("Error fetching employees:", error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
@@ -89,11 +102,8 @@ const HomePage = () => {
   return (
     <>
       <Container>
-        <Typography variant="h3" component="h1" gutterBottom>
-          Employee Management System
-        </Typography>
         <Typography variant="h4" component="h2" gutterBottom>
-          Employee List
+          Employees List
         </Typography>
         <Box mb={3}>
           <Button
@@ -168,9 +178,6 @@ const HomePage = () => {
             showLastButton
           />
         </Box>
-      </Container>
-      <Container>
-        <Logout />
       </Container>
     </>
   );

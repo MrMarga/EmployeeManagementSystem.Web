@@ -32,4 +32,8 @@
     <PackageReference Include="Twileloop.Timezone" Version="2.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Uploads\" />
+  </ItemGroup>
+
 </Project>

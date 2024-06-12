@@ -1,20 +1,22 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using backend_app.Model;
 using backend_app.UserRepository;
-using Microsoft.AspNetCore.Authorization;
+using backend_app.DTO;
+
 
 namespace backend_app.Controllers
 {
-    
+
     [ApiController]
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
     {
         private readonly IUserServices _userService;
+       
 
         public AuthController(IUserServices userService)
         {
             _userService = userService;
+           
         }
 
         [HttpPost("refresh-token")]
@@ -30,16 +32,15 @@ namespace backend_app.Controllers
             return Ok(tokens);
         }
 
-
         [HttpPost("signup")]
-        public async Task<IActionResult> SignUp(SignUpRequest signUpRequest)
+        public async Task<IActionResult> SignUp([FromForm] SignUpRequest signUpRequest)
         {
             if (signUpRequest.Password != signUpRequest.ConfirmPassword)
             {
                 return BadRequest(new SignUpResponse { IsSuccess = false, Message = "Passwords do not match" });
             }
 
-            var isSuccess = await _userService.CreateUserAsync(signUpRequest.Name, signUpRequest.Username, signUpRequest.Email, signUpRequest.Password, signUpRequest.Role);
+            var isSuccess = await _userService.CreateUserAsync(signUpRequest);
 
             if (isSuccess)
             {
@@ -48,6 +49,8 @@ namespace backend_app.Controllers
 
             return BadRequest(new SignUpResponse { IsSuccess = false, Message = "User already exists" });
         }
+
+
 
         [HttpPost("login")]
         public async Task<IActionResult> LogIn(LogInRequest logInRequest)
@@ -68,6 +71,18 @@ namespace backend_app.Controllers
             return Ok(new LogInResponse { IsSuccess = true, Message = "Login successful", Tokens = userDataJson });
         }
 
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetUserById(int id)
+        {
+            var baseUrl = $"{HttpContext.Request.Scheme}:/{HttpContext.Request.Host}";
+            var userDto = await _userService.GetUserById(id, baseUrl);
+
+            if (userDto == null)
+                return NotFound();
+
+            return Ok(userDto);
+        }
 
 
 

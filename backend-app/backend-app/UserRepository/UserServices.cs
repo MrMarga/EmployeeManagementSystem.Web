@@ -1,4 +1,6 @@
 ﻿using backend_app.Data;
+using backend_app.DTO;
+using backend_app.FilesRepository;
 using backend_app.Model;
 using backend_app.UserRepository;
 using Microsoft.EntityFrameworkCore;
@@ -13,34 +15,49 @@ public class UserService : IUserServices
 {
     private readonly ApplicationDbContext _context;
     private readonly IConfiguration _configuration;
-
-    public UserService(ApplicationDbContext context, IConfiguration configuration)
+    private readonly IFileServices _fileServices;
+    
+    public UserService(ApplicationDbContext context, IConfiguration configuration, IFileServices fileServices)
     {
         _context = context;
         _configuration = configuration;
+        _fileServices = fileServices;
     }
 
-    public async Task<bool> CreateUserAsync(string name, string username, string email, string password, string roleName)
+    public async Task<bool> CreateUserAsync(SignUpRequest signUpRequest)
     {
-        if (await _context.Users.AnyAsync(u => u.Email == email))
+        if (await _context.Users.AnyAsync(u => u.Email == signUpRequest.Email))
         {
             return false;
         }
 
-        var role = await _context.Roles.SingleOrDefaultAsync(r => r.Type == roleName);
+        var role = await _context.Roles.SingleOrDefaultAsync(r => r.Type == signUpRequest.Role);
         if (role == null)
         {
-            role = new Role { Type = roleName };
+            role = new Role { Type = signUpRequest.Role };
             _context.Roles.Add(role);
             await _context.SaveChangesAsync();
         }
 
+        // Save profile picture and get the file path
+        string profilePicPath = null;
+        if (signUpRequest.ImageFile != null)
+        {
+            profilePicPath = _fileServices.SaveImage(signUpRequest.ImageFile);
+
+            if (string.IsNullOrEmpty(profilePicPath))
+            { 
+                return false;
+            }
+        }
+
         var user = new User
         {
-            Name = name,
-            Username = username,
-            Email = email,
-            PasswordHash = ComputeHash(password)
+            Name = signUpRequest.Name,
+            Username = signUpRequest.Username,
+            Email = signUpRequest.Email,
+            PasswordHash = ComputeHash(signUpRequest.Password),
+            ProfileImagePath = profilePicPath, // Save the image path here
         };
 
         _context.Users.Add(user);
@@ -56,6 +73,31 @@ public class UserService : IUserServices
         await _context.SaveChangesAsync();
 
         return true;
+    }
+
+
+    public async Task<UserDTO> GetUserById(int id, string baseUrl)
+    {
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+
+        if (user == null)
+            return null;
+
+        string imageUrl = null;
+        if (!string.IsNullOrEmpty(user.ProfileImagePath))
+        {
+            imageUrl = user.ProfileImagePath;
+        }
+
+        var userDto = new UserDTO
+        {
+           
+            Name = user.Name,
+            Email = user.Email,
+            ProfileImagePath = $"{baseUrl}/{imageUrl}"
+        };
+
+        return userDto;
     }
 
     public async Task<User> AuthenticateAsync(string email, string password)
@@ -124,7 +166,7 @@ public class UserService : IUserServices
 
         // Step 6: Generate New Refresh Token
         string refreshToken = GenerateRefreshToken();
-        await StoreRefreshToken(refreshToken, user.Id, deviceId, DateTime.UtcNow.AddMinutes(15));
+        await StoreRefreshToken(refreshToken, user.Id, deviceId, DateTime.UtcNow.AddMinutes(30));
 
         // Step 7: Return Auth Tokens
         return new AuthTokens
@@ -134,8 +176,6 @@ public class UserService : IUserServices
             RefreshToken = refreshToken
         };
     }
-
-
 
     private string GenerateDeviceId(User user)
     {

@@ -5,6 +5,8 @@ const Configuration = {
   ForgotPassword: "https://localhost:7298/api/Auth/forgot-password",
   ResetPassword: "https://localhost:7298/api/Auth/reset-password",
 
+  GetUserById: (id) => `https://localhost:7298/api/Auth/${id}`,
+
   //-----------------------EmployeeCRUD-----------------//
 
   GetAllEmployee: (pageNumber, pageSize) =>

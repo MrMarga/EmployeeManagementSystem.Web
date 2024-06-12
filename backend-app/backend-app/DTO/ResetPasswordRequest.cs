@@ -1,4 +1,4 @@
-﻿namespace backend_app.Model
+﻿namespace backend_app.DTO
 {
     public class ResetPasswordRequest
     {

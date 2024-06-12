@@ -15,6 +15,7 @@ import ProtectedLoginRoute from "./Component/ProtectedLoginRoute";
 import ForgotPassword from "./Component/ForgetPassword";
 import PasswordReset from "./Component/PasswordReset";
 import ProtectedServiceRoute from "./Component/ProtectedServiceRoute";
+import Layout from "./Component/Layout";
 
 function App() {
   return (
@@ -33,18 +34,17 @@ function App() {
         />
 
         {/* Protected Routes */}
-        <Route
-          path="/homePage"
-          element={<ProtectedRoute element={<HomePage />} />}
-        />
-        <Route
-          path="/addEmployee"
-          element={<ProtectedServiceRoute element={<AddEmployee />} />}
-        />
-        <Route
-          path="/updateEmployee/:id"
-          element={<ProtectedServiceRoute element={<UpdateEmployee />} />}
-        />
+        <Route element={<ProtectedRoute element={<Layout />} />}>
+          <Route path="/homePage" element={<HomePage />} />
+          <Route
+            path="/addEmployee"
+            element={<ProtectedServiceRoute element={<AddEmployee />} />}
+          />
+          <Route
+            path="/updateEmployee/:id"
+            element={<ProtectedServiceRoute element={<UpdateEmployee />} />}
+          />
+        </Route>
 
         {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/" />} />

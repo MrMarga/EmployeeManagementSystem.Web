@@ -63,6 +63,7 @@ const Login = () => {
           Role: formData.RoleValue,
         };
         const response = await authService.Login(data);
+
         if (response.data.isSuccess) {
           console.log(response.data.tokens);
 
@@ -98,6 +99,7 @@ const Login = () => {
           localStorage.setItem("Exp Time", expirationTime);
           localStorage.setItem("UserInfo", JSON.stringify(userInfo));
           localStorage.setItem("UserRole", userInfo.role);
+          localStorage.setItem("UserId", userInfo.nameid);
 
           navigate("/homePage");
           console.log("Logged In successfully!");
