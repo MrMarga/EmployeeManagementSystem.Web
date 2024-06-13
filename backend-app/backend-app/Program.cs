@@ -10,6 +10,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using Amazon.S3;
 
 
 namespace backend_app
@@ -60,6 +61,10 @@ namespace backend_app
             // Registering Database
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseNpgsql(builder.Configuration.GetConnectionString("Backend-DB")));
+
+            //AWS Configuartion for S3
+            builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions());
+            builder.Services.AddAWSService<IAmazonS3>();
 
             // Add JWT authentication
             var jwtSecretKey = JwtSecretKeyGenerator.GenerateJwtSecretKey();

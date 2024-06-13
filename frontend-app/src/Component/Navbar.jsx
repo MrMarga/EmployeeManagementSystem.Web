@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { AppBar, Toolbar, Typography, Avatar, Box } from "@mui/material";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Avatar,
+  Box,
+  Button,
+} from "@mui/material";
 import AuthServices from "../Services/AuthServices";
 import Logout from "./Logout";
 
@@ -34,17 +41,27 @@ const Navbar = () => {
           Employee Management System
         </Typography>
         {user && (
-          <Box display="flex" alignItems="center">
+          <Box display="flex" alignItems="center" ml={2}>
             <Avatar alt={user.name} src={user.profileImagePath} />
             <Box ml={2}>
               <Typography variant="body1">{user.name}</Typography>
-              {/* Assuming user.role is available in the response */}
               <Typography variant="body2">{user.role}</Typography>
             </Box>
           </Box>
         )}
-        <Box>
-          <Logout />
+        <Box ml={2}>
+          <Button
+            sx={{
+              backgroundColor: "white",
+              color: "#1976D2",
+              "&:hover": {
+                backgroundColor: "Black",
+                color: "White",
+              },
+            }}
+          >
+            <Logout />
+          </Button>
         </Box>
       </Toolbar>
     </AppBar>

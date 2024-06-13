@@ -57,7 +57,7 @@ public class UserService : IUserServices
             Username = signUpRequest.Username,
             Email = signUpRequest.Email,
             PasswordHash = ComputeHash(signUpRequest.Password),
-            ProfileImagePath = profilePicPath, // Save the image path here
+            ProfileImagePath = profilePicPath,
         };
 
         _context.Users.Add(user);
@@ -78,7 +78,10 @@ public class UserService : IUserServices
 
     public async Task<UserDTO> GetUserById(int id, string baseUrl)
     {
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+        var user = await _context.Users
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .SingleOrDefaultAsync(u => u.Id == id);
 
         if (user == null)
             return null;
@@ -91,7 +94,14 @@ public class UserService : IUserServices
 
         var userDto = new UserDTO
         {
-           
+            Roles = user.UserRoles.Select(ur => new UserRoleDTO
+            {
+               
+                Role = new RoleDTO
+                {
+                    Type = ur.Role.Type
+                }
+            }).ToList(),
             Name = user.Name,
             Email = user.Email,
             ProfileImagePath = $"{baseUrl}/{imageUrl}"
@@ -99,6 +109,7 @@ public class UserService : IUserServices
 
         return userDto;
     }
+
 
     public async Task<User> AuthenticateAsync(string email, string password)
     {
@@ -269,7 +280,7 @@ public class UserService : IUserServices
         var accessTokenString = tokenHandler.WriteToken(accessToken);
 
         // Update the existing refresh token expiration date
-        storedToken.ExpirationDate = DateTime.UtcNow.AddMinutes(15);
+        storedToken.ExpirationDate = DateTime.UtcNow.AddMinutes(30);
         _context.RefreshTokens.Update(storedToken);
         await _context.SaveChangesAsync();
 
