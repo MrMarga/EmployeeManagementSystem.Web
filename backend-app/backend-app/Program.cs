@@ -1,16 +1,16 @@
-using backend_app.Data;
-using backend_app.EmployeeRepository.BussinessLayer;
-using backend_app.EmployeeRepository;
-using backend_app.FilesRepository;
-using backend_app.UserRepository;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
+using backend_app.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using System.Text;
-
+using backend_app.EmployeeRepository;
+using backend_app.FilesRepository;  
+using Amazon.S3;
+using backend_app.EmployeeRepository.BussinessLayer;
+using backend_app.UserRepository;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.FileProviders;
+using System;
 
 namespace backend_app
 {
@@ -22,40 +22,8 @@ namespace backend_app
 
             // Register services
             builder.Services.AddControllers();
-            builder.Services.AddHttpContextAccessor();
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Pappa´s API", Version = "v1" });
-
-                // Define the OAuth2.0 scheme that's in use (i.e., Implicit Flow)
-                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-                {
-                    Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
-                    Name = "Authorization",
-                    In = ParameterLocation.Header,
-                    Type = SecuritySchemeType.ApiKey,
-                    Scheme = "Bearer"
-                });
-
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
-                {
-                    {
-                        new OpenApiSecurityScheme
-                        {
-                            Reference = new OpenApiReference
-                            {
-                                Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            },
-                            Scheme = "oauth2",
-                            Name = "Bearer",
-                            In = ParameterLocation.Header,
-                        },
-                        new List<string>()
-                    }
-                });
-            });
+            builder.Services.AddSwaggerGen();
 
             // Registering Database
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -65,7 +33,11 @@ namespace backend_app
             var jwtSecretKey = JwtSecretKeyGenerator.GenerateJwtSecretKey();
             builder.Configuration["Jwt:Key"] = jwtSecretKey;
 
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
             .AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -76,31 +48,36 @@ namespace backend_app
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = builder.Configuration["Jwt:Issuer"],
                     ValidAudience = builder.Configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
-                    ClockSkew = TimeSpan.Zero
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
                 };
             });
+
+            Console.WriteLine(jwtSecretKey);
 
             // Injecting Dependencies
             builder.Services.AddScoped<IUserServices, UserService>();
             builder.Services.AddScoped<IEmployeeCRUD, EmployeeCRUD>();
-            builder.Services.AddScoped<IFileServices, FileServices>();
+            builder.Services.AddScoped<IFileServices, FileServices>(); // Register IFileServices and its implementation
 
-            // Enabling Directory Access
-            builder.Services.AddDirectoryBrowser();
+            // Configure AWS services
+            builder.Services.AddDefaultAWSOptions(builder.Configuration.GetAWSOptions("AWS"));
+            builder.Services.AddAWSService<IAmazonS3>();
+
             var app = builder.Build();
 
-            // Retrieve IWebHostEnvironment from the app
-            var environment = app.Services.GetRequiredService<IWebHostEnvironment>();
+            // Configure logging
+            var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+            var logger = loggerFactory.CreateLogger<Program>();
 
             // Configure the HTTP request pipeline
-            if (environment.IsDevelopment())
+            if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
 
             app.UseHttpsRedirection();
+
             app.UseRouting();
 
             // Enable CORS before authentication and authorization
@@ -114,7 +91,7 @@ namespace backend_app
             app.UseAuthentication();
             app.UseAuthorization();
 
-            var fileProvider = new PhysicalFileProvider(Path.Combine(environment.ContentRootPath, "uploads"));
+            var fileProvider = new PhysicalFileProvider(Path.Combine(app.Environment.ContentRootPath, "uploads"));
             var requestPath = "/Uploads";
 
             app.UseStaticFiles(new StaticFileOptions
@@ -128,7 +105,6 @@ namespace backend_app
                 FileProvider = fileProvider,
                 RequestPath = requestPath
             });
-
 
             // Map logout endpoint
             app.Map("/api/auth/logout", app =>
@@ -144,6 +120,9 @@ namespace backend_app
             {
                 endpoints.MapControllers();
             });
+
+            // Log information about startup
+            logger.LogInformation("Application started.");
 
             app.Run();
         }

@@ -102,9 +102,7 @@ const HomePage = () => {
   return (
     <>
       <Container>
-        <Typography variant="h4" component="h2" gutterBottom>
-          Employees List
-        </Typography>
+        <Box margin={2}></Box>
         <Box mb={3}>
           <Button
             variant="contained"

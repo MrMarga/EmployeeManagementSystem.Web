@@ -1,4 +1,3 @@
-import { Button } from "@mui/material";
 import React from "react";
 
 const Logout = () => {
@@ -9,7 +8,7 @@ const Logout = () => {
 
   return (
     <div>
-      <Button onClick={onLogout}>Logout</Button>
+      <div onClick={onLogout}> Logout</div>
     </div>
   );
 };
