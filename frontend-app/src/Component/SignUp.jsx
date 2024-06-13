@@ -7,6 +7,8 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import AuthServices from "../Services/AuthServices";
+import Input from "@mui/material/Input";
+import { FormLabel } from "@mui/material";
 
 const authService = new AuthServices();
 
@@ -18,6 +20,7 @@ const SignUp = () => {
     ConfirmPassword: "",
     Email: "",
     RoleValue: "User",
+    ProfilePicture: null,
     NameFlag: false,
     EmailFlag: false,
     UsernameFlag: false,
@@ -34,6 +37,10 @@ const SignUp = () => {
     setFormData({ ...formData, RoleValue: e.target.value });
   };
 
+  const handleFileChange = (e) => {
+    setFormData({ ...formData, ProfilePicture: e.target.files[0] });
+  };
+
   const checkValidity = () => {
     setFormData({
       ...formData,
@@ -46,7 +53,7 @@ const SignUp = () => {
     });
   };
 
-  const handleSignInClick = (e) => {
+  const handleSignInClick = () => {
     window.location.href = "/Login";
   };
 
@@ -61,6 +68,7 @@ const SignUp = () => {
       Email,
       Password,
       ConfirmPassword,
+      ProfilePicture,
     } = formData;
     if (
       !UsernameFlag &&
@@ -73,14 +81,16 @@ const SignUp = () => {
       Password === ConfirmPassword
     ) {
       console.log("Form submitted successfully!");
-      let data = {
-        username: formData.Username,
-        name: formData.Name,
-        email: formData.Email,
-        password: formData.Password,
-        confirmPassword: formData.ConfirmPassword,
-        role: formData.RoleValue,
-      };
+
+      let data = new FormData();
+      data.append("username", formData.Username);
+      data.append("name", formData.Name);
+      data.append("email", formData.Email);
+      data.append("password", formData.Password);
+      data.append("confirmPassword", formData.ConfirmPassword);
+      data.append("role", formData.RoleValue);
+      data.append("ImageFile", formData.ProfilePicture);
+
       authService
         .SignUp(data)
         .then((response) => {
@@ -91,6 +101,7 @@ const SignUp = () => {
             ConfirmPassword: "",
             Email: "",
             RoleValue: "User",
+            ProfilePicture: "",
             EmailFlag: false,
             UsernameFlag: false,
             PasswordFlag: false,
@@ -164,6 +175,22 @@ const SignUp = () => {
               value={formData.ConfirmPassword}
               onChange={handleValues}
             />
+
+            <FormLabel>Profile Picture : </FormLabel>
+            <Input
+              type="file"
+              id="profile-picture"
+              onChange={handleFileChange}
+            />
+            {/* Profile picture preview */}
+            {formData.ProfilePicture && (
+              <img
+                src={URL.createObjectURL(formData.ProfilePicture)}
+                alt="Profile Preview"
+                style={{ maxWidth: "100px", marginTop: "10px" }}
+              />
+            )}
+
             <RadioGroup
               row
               aria-labelledby="demo-row-radio-buttons-group-label"

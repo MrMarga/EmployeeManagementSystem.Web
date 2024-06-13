@@ -4,10 +4,14 @@ import Configuration from "../Configurations/Configuration";
 const axiosServices = new AxiosServices();
 
 export default class AuthServices {
-  SignUp(data) {
-    return axiosServices.post(Configuration.SignUp, data, {
-      withCredentials: true,
-    });
+  SignUp(formData) {
+    const config = {
+      headers: {
+        "content-type": "multipart/form-data",
+      },
+    };
+
+    return axiosServices.post(Configuration.SignUp, formData, config);
   }
 
   Login(data) {
@@ -32,5 +36,9 @@ export default class AuthServices {
     return axiosServices.post(Configuration.ResetPassword, data, {
       withCredentials: true,
     });
+  }
+
+  GetUserById(id) {
+    return axiosServices.get(Configuration.GetUserById(id));
   }
 }

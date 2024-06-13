@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using backend_app.Model;
+using Microsoft.AspNetCore.Identity;
 
-namespace backend_app.Model
+namespace backend_app.DTO
 {
     public class LogInRequest
     {
@@ -13,7 +14,7 @@ namespace backend_app.Model
     {
         public bool IsSuccess { get; set; }
         public string Message { get; set; }
-        public AuthTokens Tokens { get; set; }
+        public AuthTokens Tokens { get; set; } 
 
     }
 }

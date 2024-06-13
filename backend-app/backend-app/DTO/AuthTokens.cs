@@ -1,4 +1,4 @@
-﻿namespace backend_app.Model
+﻿namespace backend_app.DTO
 {
     public class AuthTokens
     {
@@ -6,6 +6,8 @@
         public string RefreshToken { get; set; }
 
         public string DeviceID { get; set; }
+
+     
     }
 }
 

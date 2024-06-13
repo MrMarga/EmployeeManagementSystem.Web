@@ -1,13 +1,16 @@
-using Microsoft.EntityFrameworkCore;
 using backend_app.Data;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using backend_app.EmployeeRepository;
-using backend_app.UserRepository;
 using backend_app.EmployeeRepository.BussinessLayer;
+using backend_app.EmployeeRepository;
+using backend_app.FilesRepository;
+using backend_app.UserRepository;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Text;
+
 
 namespace backend_app
 {
@@ -19,6 +22,7 @@ namespace backend_app
 
             // Register services
             builder.Services.AddControllers();
+            builder.Services.AddHttpContextAccessor();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
             {
@@ -80,15 +84,17 @@ namespace backend_app
             // Injecting Dependencies
             builder.Services.AddScoped<IUserServices, UserService>();
             builder.Services.AddScoped<IEmployeeCRUD, EmployeeCRUD>();
+            builder.Services.AddScoped<IFileServices, FileServices>();
 
+            // Enabling Directory Access
+            builder.Services.AddDirectoryBrowser();
             var app = builder.Build();
 
-            // Configure logging
-            var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
-            var logger = loggerFactory.CreateLogger<Program>();
+            // Retrieve IWebHostEnvironment from the app
+            var environment = app.Services.GetRequiredService<IWebHostEnvironment>();
 
             // Configure the HTTP request pipeline
-            if (app.Environment.IsDevelopment())
+            if (environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
@@ -108,6 +114,22 @@ namespace backend_app
             app.UseAuthentication();
             app.UseAuthorization();
 
+            var fileProvider = new PhysicalFileProvider(Path.Combine(environment.ContentRootPath, "uploads"));
+            var requestPath = "/Uploads";
+
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = fileProvider,
+                RequestPath = requestPath
+            });
+
+            app.UseDirectoryBrowser(new DirectoryBrowserOptions
+            {
+                FileProvider = fileProvider,
+                RequestPath = requestPath
+            });
+
+
             // Map logout endpoint
             app.Map("/api/auth/logout", app =>
             {
@@ -122,9 +144,6 @@ namespace backend_app
             {
                 endpoints.MapControllers();
             });
-
-            // Log information about startup
-            logger.LogInformation("Application started.");
 
             app.Run();
         }

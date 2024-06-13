@@ -33,8 +33,6 @@ namespace backend_app.Data
                 .HasOne(ur => ur.Role)
                 .WithMany(r => r.UserRoles)
                 .HasForeignKey(ur => ur.RoleId);
-
-           
         }
     }
 }

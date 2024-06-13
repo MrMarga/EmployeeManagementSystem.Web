@@ -1,16 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace backend_app.Model
 {
     public class User
     {
         public int Id { get; set; }
+        public string Name { get; set; }
+        public string Username { get; set; }
+        public string Email { get; set; }
+        public string PasswordHash { get; set; }
+        public string ProfileImagePath { get; set; }
 
-        public required string Name { get; set; }
-        public required string Username { get; set; }
-        public required string Email { get; set; }
-        public required string PasswordHash { get; set; }
-        public  ICollection<UserRole> UserRoles { get; set; }
+        [NotMapped] 
+        public IFormFile? ImageFile { get; set; } 
+        public ICollection<UserRole> UserRoles { get; set; }
 
     }
 
